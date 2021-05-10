@@ -21,7 +21,7 @@ class BroadCast extends StatelessWidget {
               width: 40,
               color: Colors.blue,
               child: Text(
-                "Hi everyone akshflakfklasjf"
+                "Hi everyone"
               ),
               // child: Text(
               //   "Chuan Hao",
