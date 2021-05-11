@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -29,6 +27,13 @@ class _BroadCastsState extends State<BroadCasts> {
             color: Colors.blue[600],
           ),
         ),
+        actions: [
+          IconButton(
+              icon: Icon(
+                Icons.location_searching
+              ),
+              onPressed: () {})
+        ],
       ),
       backgroundColor: Colors.blue[50],
       body: SingleChildScrollView(
@@ -40,11 +45,21 @@ class _BroadCastsState extends State<BroadCasts> {
                 fit: BoxFit.cover,
               ),
             ),
-            //SizedBox(height: 10),
-            BroadCast(),
+            BroadCast(text1: 'Chuan Hao', text2: "Wanna meet up, going for lunch at the deck?? !!",),
+            BroadCast(text1: 'Aditi Chadha', text2: "Ordering lunch from Al Amaan, anyone wanna join",),
+            BroadCast(text1: 'Shivam Tiwari', text2: "Guys, CS2100 query??? Anyone can help"),
           ],
         ),
-      )
+      ),
+      floatingActionButton: Visibility(
+        child: FloatingActionButton(
+          child: Icon(Icons.bolt),
+          backgroundColor: Colors.yellow[600],
+          onPressed: () {
+            Navigator.pushReplacementNamed(context, '/createBroadcast');
+          },
+        ),
+      ),
     );
   }
 }

@@ -264,6 +264,9 @@ class _ProfilePageState extends State<ProfilePage> {
         child: FloatingActionButton(
           child: Icon(Icons.bolt),
           backgroundColor: Colors.yellow[600],
+          onPressed: () {
+            Navigator.pushNamed(context, '/createBroadcast');
+          },
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:grup/profile_page.dart';
 import 'package:grup/navdrawer.dart';
+import 'package:grup/screens/broadcast_creation.dart';
 import 'package:grup/screens/broadscasts.dart';
 void main() {
   runApp(MyApp());
@@ -27,6 +28,7 @@ class MyApp extends StatelessWidget {
       home: ProfilePage(),
       routes: {
         '/localBroadcasts' : (context) => BroadCasts(),
+        '/createBroadcast' : (context) => BroadcastCreation(),
       },
     );
   }
