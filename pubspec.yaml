@@ -23,6 +23,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_neumorphic: ^3.1.0
+  logger: ^1.0.0
+  http: ^0.13.3
+  flutter_secure_storage: 4.0.0
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -50,6 +54,9 @@ flutter:
     - assets/The_minions_in_Minions.jpg
     - assets/minions.jpg
     - assets/singapore.jpg
+    - assets/drawer.jpg
+    - assets/newDrawer.jpg
+    - assets/icon.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
@@ -69,6 +76,9 @@ flutter:
     - family: Itim
       fonts:
         - asset: fonts/Itim-Regular.ttf
+    - family: ArchitectsDaughter-Regular.ttf
+      fonts:
+        - asset: fonts/ArchitectsDaughter-Regular.ttf
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages

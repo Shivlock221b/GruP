@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:grup/navdrawer.dart';
+import 'package:grup/networkHandler.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key key}) : super(key: key);
@@ -16,18 +17,36 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
 
   String text = "";
-  List<String> tags = [];
+  //List<String> tags = [];
+  NetworkHandler hello = NetworkHandler();
 
   @override
   Widget build(BuildContext context) {
+    Map<String, dynamic> data = ModalRoute.of(context).settings.arguments;
+    List<String> tags = [];
+    print(data);
+    print(data['queryUser']);
+    if (data['queryUser'][0]['tags'].length > 0) {
+      for (int i = 0; i < data['queryUser'][0]['tags'].length; i++) {
+        tags.add(data['queryUser'][0]['tags'][i]);
+      }
+    }
     bool showFb = MediaQuery.of(context).viewInsets.bottom != 0;
     return Scaffold(
       backgroundColor: Colors.blue[50],
       drawer: NavDrawer(),
       appBar: AppBar(
+        actions: [
+          IconButton(
+              icon: Icon(
+                Icons.message
+              ),
+              onPressed: () {}
+          ),
+        ],
         backgroundColor: Colors.lightBlue,
         title: Text(
-          "Shivam Tiwari",
+          data['queryUser'][0]['name'],
           style: TextStyle(
             color: Colors.white
           ),
@@ -62,7 +81,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         child: Center(
                           child: CircleAvatar(
                             backgroundImage: AssetImage(
-                              'assets/photo.jpg',
+                              'assets/${data['queryUser'][0]['profilepic']}',
                             ),
                             radius: 100.0,
                           ),
@@ -136,7 +155,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                                 iconSize: 40,
                                 onPressed: () {
-                                  print("find your groups");
+
                                 },
                               ),
                               Text(
@@ -156,7 +175,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                                 iconSize: 40,
                                 onPressed: () {
-                                  print("find your friends");
+
                                 },
                               ),
                               Text(
@@ -172,15 +191,15 @@ class _ProfilePageState extends State<ProfilePage> {
                               IconButton(
                                 color: Colors.blue[900],
                                 icon: Icon(
-                                    Icons.settings
+                                    Icons.public
                                 ),
                                 iconSize: 40,
                                 onPressed: () {
-                                  print("set your profile");
+                                  hello.get('/api/getInfo');
                                 },
                               ),
                               Text(
-                                "Settings",
+                                "Community",
                               )
                             ],
                           ),
@@ -198,7 +217,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             "TAGS",
                             style: TextStyle(
                               fontSize: 20,
-                              fontFamily: 'Lobster',
+                              //fontFamily: 'Lobster',
                               color: Colors.blue[900],
                               //backgroundColor: Colors.grey[100]
                             ),
@@ -239,7 +258,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 icon: Icon(Icons.add),
                                 onPressed: () {
                                   setState(() {
-                                    tags.add(this.text);
+                                    data['queryUser'][0]['tags'].add(this.text);
                                   });
                                 },
                                 label: Text(

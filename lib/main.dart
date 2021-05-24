@@ -1,9 +1,16 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:grup/profile_page.dart';
 import 'package:grup/navdrawer.dart';
 import 'package:grup/screens/broadcast_creation.dart';
 import 'package:grup/screens/broadscasts.dart';
+import 'package:grup/screens/frontpage.dart';
+import 'package:grup/screens/login.dart';
+import 'package:grup/screens/signup.dart';
+
 void main() {
+  HttpOverrides.global = new MyHttpOverrides();
   runApp(MyApp());
 }
 
@@ -25,12 +32,22 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: ProfilePage(),
+      home: FrontPage(),
       routes: {
+        '/signup' : (context) => SignUp(),
+        '/login' : (context) => Login(),
         '/localBroadcasts' : (context) => BroadCasts(),
         '/createBroadcast' : (context) => BroadcastCreation(),
+        '/profilePage' : (context) => ProfilePage(),
       },
     );
+  }
+}
+
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext context) {
+    return super.createHttpClient(context);
   }
 }
 

@@ -17,13 +17,13 @@ class NavDrawer extends StatelessWidget {
               color: Colors.blue,
               image: DecorationImage(
                 image: AssetImage(
-                  'assets/minions.jpg'
+                  'assets/newDrawer.jpg'
                 ),
-                fit: BoxFit.cover
+                fit: BoxFit.fill
               )
             ),
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
+              filter: ImageFilter.blur(sigmaX: 3.0, sigmaY: 3.0),
               child: Container(
                 decoration: BoxDecoration(color: Colors.blue.withOpacity(0.0)),
                 child: Text(
@@ -139,7 +139,7 @@ class NavDrawer extends StatelessWidget {
     ),
             child: ListTile(
               title: Text(
-                "Market",
+                "Settings",
                 style: TextStyle(
                     fontSize: 20,
                     color: Colors.blue[900],

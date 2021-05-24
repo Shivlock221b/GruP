@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="orion.co.grup">
-   <application
+
+    <application
         android:label="grup"
         android:icon="@mipmap/ic_launcher">
         <activity
