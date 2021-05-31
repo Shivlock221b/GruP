@@ -137,10 +137,10 @@ io.on("connection", (client) => {
     // });
   });
   //passport.authenticate('jwt', {session: false}), 
-  app.post('/api/getChats', passport.authenticate('jwt', {session: false}),async function(req, res) {
+  app.post('/api/getChats' ,async function(req, res) {
       try {
           console.log(req.body);
-          //console.log(io);
+          console.log("hello again");
           let data = req.body.data._id;
           console.log(data);
           console.log(socket_id);
