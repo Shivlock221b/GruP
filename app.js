@@ -186,7 +186,7 @@ io.on("connection", (client) => {
   })
 
 
-server.listen(3000, function() {
+server.listen(process.env.PORT || 5000, function() {
     console.log("server started at port 3000");
 });
 // app.listen(3000, function() {
