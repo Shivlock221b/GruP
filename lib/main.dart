@@ -1,12 +1,15 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:grup/Pages/IndividualChat.dart';
 import 'package:grup/profile_page.dart';
 import 'package:grup/navdrawer.dart';
 import 'package:grup/screens/broadcast_creation.dart';
 import 'package:grup/screens/broadscasts.dart';
+import 'package:grup/screens/chats.dart';
 import 'package:grup/screens/frontpage.dart';
 import 'package:grup/screens/login.dart';
+import 'package:grup/screens/settings.dart';
 import 'package:grup/screens/signup.dart';
 
 void main() {
@@ -39,6 +42,9 @@ class MyApp extends StatelessWidget {
         '/localBroadcasts' : (context) => BroadCasts(),
         '/createBroadcast' : (context) => BroadcastCreation(),
         '/profilePage' : (context) => ProfilePage(),
+        //'/individualChat' : (context) => IndividualChat(),
+        //'/allChats' : (context) => Chats()
+        './settings' : (context) => Settings(),
       },
     );
   }

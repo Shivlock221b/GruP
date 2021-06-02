@@ -12,19 +12,21 @@ class Tag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Neumorphic(
-      padding: EdgeInsets.all(0.0),
-      margin: EdgeInsets.all(0.0),
-      drawSurfaceAboveChild: false,
+      //padding: EdgeInsets.all(0.0),
+      //margin: EdgeInsets.all(0.0),
+      margin: EdgeInsets.fromLTRB(10.0, 2.0, 0.0, 10.0),
+      //drawSurfaceAboveChild: false,
       style: NeumorphicStyle(
-        depth: 5,
-        intensity: 0.8,
-        shape: NeumorphicShape.convex,
-        border: NeumorphicBorder.none(),
-        lightSource: LightSource.bottom,
+        //depth: 7,
+        //intensity: 1,
+        //color: Colors.white,
+        //shape: NeumorphicShape.convex,
+        //border: NeumorphicBorder.none(),
+        //lightSource: LightSource.bottom,
         boxShape: NeumorphicBoxShape.roundRect(BorderRadius.all(Radius.circular(20.0))),
       ),
       child: Container(
-        margin: EdgeInsets.fromLTRB(5.0, 2.0, 0.0, 2.0),
+        //margin: EdgeInsets.fromLTRB(5.0, 2.0, 0.0, 10.0),
         padding: EdgeInsets.all(8.0),
         decoration: BoxDecoration(
           shape: BoxShape.rectangle,

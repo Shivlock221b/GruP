@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 class NavDrawer extends StatelessWidget {
   const NavDrawer({Key key}) : super(key: key);
@@ -12,40 +13,43 @@ class NavDrawer extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.blue,
-              image: DecorationImage(
-                image: AssetImage(
-                  'assets/newDrawer.jpg'
-                ),
-                fit: BoxFit.fill
-              )
-            ),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 3.0, sigmaY: 3.0),
-              child: Container(
-                decoration: BoxDecoration(color: Colors.blue.withOpacity(0.0)),
-                child: Text(
-                  'Directory',
-                  style: TextStyle(
-                    color: Colors.black87,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Lobster',
-                  )
-                ),
+          Container(
+            height: 200,
+            child: DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                // image: DecorationImage(
+                //   image: AssetImage(
+                //     'assets/newDrawer.jpg'
+                //   ),
+                //   fit: BoxFit.fill
+                // )
               ),
-            )
-            // Text(
-            //   "Fields",
-            //   style: TextStyle(
-            //     color: Colors.blue[900],
-            //     fontSize: 28,
-            //     fontWeight: FontWeight.bold,
-            //     fontFamily: 'Lobster'
-            //   ),
-            // ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 3.0, sigmaY: 3.0),
+                child: Container(
+                  decoration: BoxDecoration(color: Colors.blue.withOpacity(0.0)),
+                  child: Text(
+                    'Directory',
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Lobster',
+                    )
+                  ),
+                ),
+              )
+              // Text(
+              //   "Fields",
+              //   style: TextStyle(
+              //     color: Colors.blue[900],
+              //     fontSize: 28,
+              //     fontWeight: FontWeight.bold,
+              //     fontFamily: 'Lobster'
+              //   ),
+              // ),
+            ),
           ),
           Divider(height: 10),
           Container(
@@ -137,15 +141,20 @@ class NavDrawer extends StatelessWidget {
     bottom: BorderSide.merge(new BorderSide(), new BorderSide()),
     )
     ),
-            child: ListTile(
-              title: Text(
-                "Settings",
-                style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.blue[900],
-                    fontFamily: 'Lobster'
-                ),
-              )
+            child: InkWell(
+              onTap: () {
+                Navigator.pushNamed(context, './settings');
+              },
+              child: ListTile(
+                title: Text(
+                  "Settings",
+                  style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.blue[900],
+                      fontFamily: 'Lobster'
+                  ),
+                )
+              ),
             ),
           )
         ],
