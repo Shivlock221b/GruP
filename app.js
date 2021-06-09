@@ -10,6 +10,8 @@ const userModel = require("./model/userModel");
 const jwt = require("jsonwebtoken");
 var http = require("http");
 const chatModel = require("./model/chatModel");
+const broadcastModel = require("./model/broadCast");
+const mongoose_ttl = require("mongoose-ttl");
 
 
 
@@ -137,7 +139,7 @@ io.on("connection", (client) => {
     // });
   });
   //passport.authenticate('jwt', {session: false}), 
-  app.post('/api/getChats' ,async function(req, res) {
+  app.post('/api/getChats' ,passport.authenticate('jwt', {session: false}), async function(req, res) {
       try {
           console.log(req.body);
           console.log("hello again");
@@ -157,7 +159,7 @@ io.on("connection", (client) => {
       }
   })
 
-  app.post("/api/chats", async function(req, res) {
+  app.post("/api/chats", passport.authenticate('jwt', {session: false}), async function(req, res) {
       try {
           console.log("helloooooo");
           console.log(req.user);
@@ -185,8 +187,100 @@ io.on("connection", (client) => {
     }
   })
 
+  app.patch("/api/updateLocation", passport.authenticate('jwt', {session: false}), async function(req, res) {
+      console.log(req.body);
+      console.log(req.user);
+      let locationdeets = req.body.data;
+      let Latitude = locationdeets.Latitude;
+      let Longitude = locationdeets.Longitude;
+      let address = locationdeets['address']
+      let userCountry = address['country']
+      let userLocality = address.subLocality != "" 
+                            ? address.subLocality 
+                            : address.locality != ""
+                                ? address.locality 
+                                : address.subAdministrativeArea != ""
+                                    ? address.subAdministrativeArea
+                                    : address.administrativeArea != ""
+                                        ? address.administrativeArea
+                                        : address.street != ""
+                                            ? address.street
+                                            : ''
+        console.log(userLocality);
+      await userModel.findByIdAndUpdate({_id: req.user._id}, {$set: {Country: userCountry, Locality: userLocality, location: {Latitude, Longitude}}});
+      res.json({
+          message: "Success"
+      })
+  })
 
-server.listen(process.env.PORT || 5000, function() {
+//   {
+//     content: 'hello\n',
+//     tags: [ 'BasketBall' ],
+//     Latitude: 1.352565,
+//     Longitude: 103.8405417,
+//     address: {
+//       name: 'Marymount View',
+//       street: 'Marymount View',
+//       isoCountryCode: 'SG',
+//       country: 'Singapore',
+//       postalCode: '',
+//       administrativeArea: '',
+//       subAdministrativeArea: '',
+//       locality: 'Singapore',
+//       subLocality: '',
+//       thoroughfare: '',
+//       subThoroughfare: ''
+//     }
+//   }
+  app.post('/api/createBroadcast', passport.authenticate('jwt', {session: false}), async function(req, res) {
+      console.log(req.body);
+      console.log(req.user);
+      console.log(req.body.time);
+      let broadcastdetails = req.body.data
+      let userName = req.user.userName;
+      let userId = req.user._id;
+      let Latitude = broadcastdetails.Latitude;
+      let Longitude = broadcastdetails.Longitude;
+      let newBroadcast = await broadcastModel.create({
+        sender: {
+            userName,
+            userId
+        },
+        content: broadcastdetails.content,
+        Country: broadcastdetails.address.country,
+        locality: broadcastdetails.address.locality,
+        tags: broadcastdetails.tags,
+        location: {Latitude, Longitude},
+        createdAt: new Date()
+      })
+      console.log(newBroadcast);
+      res.json({
+          message: "Successful broadcast creation"
+      })
+  })
+
+
+  app.get('/api/getBroadcasts', passport.authenticate('jwt', {session: false}), async function(req, res) {
+    console.log(req.user);
+    let user = req.user;
+    let tags = user.tags;
+    let userId = user._id;
+    console.log(user._id);
+    let broadcastList = await broadcastModel.find({tags: {$in: tags}});
+    let broadcasts = broadcastList.filter( (broadcast) => {
+        if (broadcast.sender.userName == user.userName) {
+            return false;
+        }
+        return true;
+    });
+    console.log(broadcasts);
+    res.json({
+        message: "reached",
+        broadcasts: broadcasts
+    })
+  })
+
+server.listen(process.env.PORT || 3000, function() {
     console.log("server started at port 3000");
 });
 // app.listen(3000, function() {

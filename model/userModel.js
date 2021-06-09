@@ -27,9 +27,17 @@ let userSchema = mongoose.Schema({
     },
 
     location: {
-        type: String,
-        require: true,
-        default: "Agra, India"
+        type: Object,
+        //require: true,
+        //default: "Agra, India"
+    },
+
+    Country: {
+        type: String
+    },
+
+    Locality: {
+        type: String
     },
 
     profilepic: {

@@ -9,7 +9,7 @@ async function createUser(request, response) {
         let userDetails = request.body;
         //console.log(request);
         console.log(request.body);
-        let queryUser = await userModel.find({email: userDetails.email});
+        let queryUser = await userModel.find({email: userDetails.email,},);
         if (queryUser.length > 0) {
             response.json({
                 message: "User already exists",
@@ -34,7 +34,7 @@ async function checkUser(request, response) {
     try {
         let userDetails = request.body.data;
         console.log(request.body);
-        //console.log(userDetails['password']);
+        // let filteredUsers = await userModel.find({tags: {$in: ["National University of Singapore"], $all: ["BasketBall"]}});
         let queryUser = await userModel.find({userName: userDetails["userName"], password: userDetails['password']});
         console.log(queryUser);
         if (queryUser.length) {
