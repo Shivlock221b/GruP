@@ -27,12 +27,32 @@ let broadcastSchema = mongoose.Schema({
         type: Array
     },
 
+    // expirationTime: {
+    //     type: Date,
+    //     expires: 0
+    // },
+
     createdAt: {
         type: Date,
         expires: 86400,
         default: Date.now,
         unique: false
     },
+
+    isBroadcasting: {
+        type: Boolean,
+        default: true
+    },
+
+    endorse: {
+        default: 0,
+        type: Number
+    },
+
+    comments: {
+        type: Array,
+        of: Object
+    }
 })
 
 //broadcastSchema.expires = 120;
@@ -48,5 +68,11 @@ broadcastModel.createIndexes({'createdAt' : 1}, function(err, data) {
     console.log(data)
 })
 
+// broadcastModel.createIndexes({'expirationTime' : 1}, function(err, data) {
+//     console.log(err)
+//     console.log(data)
+// })
+
 
 module.exports = broadcastModel;
+//module.exports.broadcastSchema = broadcastSchema;
