@@ -7,11 +7,11 @@ const { json } = require("body-parser");
 
 async function createUser(request, response) {
     try{
-        let userDetails = request.body;
+        let userDetails = request.body.data;
         //console.log(request);
         console.log(userDetails);
         console.log(userDetails.email);
-        console.log(userDetails.chats);
+        //console.log(userDetails.chats);
         let queryUser = await userModel.find({email: userDetails.email,},);
         console.log("appear")
         if (queryUser.length > 0) {
