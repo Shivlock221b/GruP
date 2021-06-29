@@ -77,11 +77,13 @@ let userSchema = mongoose.Schema({
     },
 
     Country: {
-        type: String
+        type: String,
+        default: ""
     },
 
     Locality: {
-        type: String
+        type: String,
+        default: ""
     },
 
     profilepic: {
@@ -90,7 +92,8 @@ let userSchema = mongoose.Schema({
     },
 
     tags: {
-        type: Array
+        type: Array,
+        default: []
         //require: true,
     },
     // chats: {

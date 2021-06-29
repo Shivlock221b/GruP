@@ -150,9 +150,52 @@ app.post("/api/createGroupChat", passport.authenticate("jwt", {session: false}),
     console.log(req.body);
 })
 
-app.post("/api/joinChatRequest", passport.authenticate("jwt", {session: false}), async function(req, res) {
+app.post("/api/joinChat", passport.authenticate("jwt", {session: false}), async function(req, res) {
     console.log("inside join group chat")
     console.log(req.body)
+    let data = req.body.data;
+    let user = req.user;
+    let found = 0;
+    for (let element of user.chats) {
+        console.log("answer")
+        if (element.chatId == data.chatId) {
+            found = 1;
+            break;
+        }
+    }
+
+    if (found > 0) {
+        res.statusCode = 400;
+        res.json({
+            message: "Chat already exists"
+        })
+    } else {
+        let textChain = await chatModel.findById(data.chatId)
+    let members = new Map();
+    for (let elem of data.members) {
+        let member = await userModel.find({userName: elem})
+        console.log(member[0])
+        members.set(elem, member[0].socketId)
+        let chat = member[0].chats.find(x => x.chatId == data.chatId)
+        chat.members.set(user.userName, user.socketId)
+        member[0].save()
+    }
+    data.members.push(user.userName);
+    await groupModel.findByIdAndUpdate({_id: data._id}, data)
+    let newChat = await chatsModel.create({
+        chatId: data['chatId'],
+        name: data.name,
+        members: members,
+    })
+    user.chats.unshift(newChat)
+    //await user.save()
+    res.json({
+        message: "reached join chat",
+        newChat,
+        user,
+        textChain
+    })
+    }   
 })
 
 // chatModel.find().then(function(allchats) {
@@ -197,6 +240,7 @@ io.on("connection", (client) => {
         //data.socketIds.forEach(elem => client.broadcast.to(elem).emit("receive", data.messageData))
         let nullObjects = {}
         for (let [k, v] of Object.entries(data.socketIds)) {
+            console.log("how many")
             if (v != null) {
                 client.broadcast.to(v).emit("receive", data.messageData)
             } else {
@@ -204,7 +248,9 @@ io.on("connection", (client) => {
             }
         }
         //console.log(nullObjects)
-        chatModel.findByIdAndUpdate({_id: data.chatId}, {$push: {textChain: data.messageData}});
+        await chatModel.findByIdAndUpdate({_id: data.chatId}, {$push: {textChain: data.messageData}}, {new: true});
+        //console.log("see chat update ******************************");
+        //console.log(chat)
         for (let [k, v] of Object.entries(nullObjects)) {
             let user = await userModel.find({userName: k}) 
             if (user[0].socketId != null) {
@@ -223,7 +269,7 @@ io.on("connection", (client) => {
                     }
                 })
                 user[0].count = user[0].count + 1;
-                user[0].save()
+                await user[0].save()
             }
         }
         console.log("sent");
@@ -292,7 +338,23 @@ io.on("connection", (client) => {
         }
         let user = await userModel.findById(data._id)
         user.set({socketId: null})
-        user.save();
+        await user.save();
+    })
+
+    client.on("/newChat", async (data) => {
+        console.log(data);
+        client.broadcast.to(data.socketId).emit("newChat", data);
+        //await userModel.findByIdAndUpdate({_id: data._id}, data)
+    })
+
+    client.on("/newMember", (data) => {
+        console.log(data)
+        let sendData = {
+            chatId: data.chatId,
+            name: data.userName,
+            socketId: client.id
+        }
+        data.socketId.forEach((elem) => client.broadcast.to(elem).emit("newMember", sendData))
     })
     
   });
@@ -317,13 +379,13 @@ io.on("connection", (client) => {
       }
   })
 
-  app.post("/api/updateCounter", passport.authenticate("jwt", {session: false}), function(req, res) {
+  app.post("/api/updateCounter", passport.authenticate("jwt", {session: false}), async function(req, res) {
       try {
           console.log("inside updateCounter")
       console.log(req.body);
       req.user.count = req.body.data.count;
       req.user.chats = req.body.data.chats;
-      req.user.save()
+      await req.user.save()
       res.json({
           message : "counter updated"
       })
@@ -508,7 +570,7 @@ io.on("connection", (client) => {
       user.location = null;
       user.set({Locality: ""});
       user.set({Country: ""});
-      user.save();
+      await user.save();
       res.json({
           message: "saved"
       })
@@ -562,7 +624,7 @@ io.on("connection", (client) => {
     }
     let user = req.user;
     user.broadcasts.push(userEvent)
-    user.save()
+    await user.save()
     console.log(newevent);
     res.json({
         message: "Successful event creation"
@@ -607,9 +669,36 @@ app.post('/api/createGroup', passport.authenticate('jwt', {session: false}), asy
         "tags" : groupDetails.tags,
     }
     user.broadcasts.push(userGroup)
-    user.save()
+    await user.save()
     res.json({
         message: "reached"
+    })
+})
+
+
+app.post("/api/setUser", passport.authenticate('jwt', {session: false}), async function(req, res) {
+    console.log(req.body);
+    let user = req.user;
+    let updated = req.body.data;
+    user.friends = updated.friends
+    user.Country = updated.Country
+    user.Locality = updated.Locality
+    user.profilepic = updated.profilepic
+    user.tags = updated.tags;
+    user.count = updated.count;
+    user.broadcast = updated.broadcast;
+    user.events = updated.events;
+    user.groups = updated.groups;
+    user.name = updated.name;
+    user.userName = updated.userName;
+    user.email = updated.email;
+    user.password = updated.password;
+    user.chats = updated.chats;
+    user.socketId = updated.socketId;
+    user.location = updated.location;
+    await user.save();
+    res.json({
+        message: "User saved"
     })
 })
 
