@@ -27,10 +27,10 @@ let broadcastSchema = mongoose.Schema({
         type: Array
     },
 
-    // expirationTime: {
-    //     type: Date,
-    //     expires: 0
-    // },
+    expirationTime: {
+        type: Date,
+        expires: 0
+    },
 
     createdAt: {
         type: Date,

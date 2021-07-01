@@ -479,7 +479,7 @@ io.on("connection", (client) => {
         locality: broadcastdetails.address.locality,
         tags: broadcastdetails.tags,
         location: {Latitude, Longitude},
-        //expirationTime: new Date(Date.now() + (120 * 1000)),
+        expirationTime: new Date(Date.now() + (broadcastdetails.duration * 60 * 60 * 1000)),
         createdAt: new Date(), 
       })
       let userBroadcast = {
