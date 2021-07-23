@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:grup/tags.dart';
 import 'package:grup/networkHandler.dart';
+import 'package:location/location.dart' as loc;
 
 class SignUp extends StatefulWidget {
   const SignUp({Key key}) : super(key: key);
@@ -22,10 +24,17 @@ class _SignUpState extends State<SignUp> {
   TextEditingController _userName = TextEditingController();
   TextEditingController _email = TextEditingController();
   TextEditingController _password = TextEditingController();
-  bool validate = false;
+  TextEditingController _confirmPasswordController = TextEditingController();
+  bool validate = true;
   String error = "";
+  String emailError = "";
+  String passwordError = "";
   bool showpass = true;
   TextEditingController controller = TextEditingController();
+  loc.Location _location = loc.Location();
+  bool _serviceEnabled;
+  loc.PermissionStatus _permissionGranted;
+  loc.LocationData _locationData;
 
   @override
   Widget build(BuildContext context) {
@@ -170,8 +179,14 @@ class _SignUpState extends State<SignUp> {
                     child: Neumorphic(
                       child: TextFormField(
                         controller: _email,
+                        validator: (value) {
+                          if (!value.contains('@')) {
+                            return "email must be valid";
+                          }
+                          return null;
+                        },
                         decoration: InputDecoration(
-                          errorText: validate ? null : error,
+                          errorText: validate ? null : emailError,
                           errorBorder: OutlineInputBorder(
                               borderSide: BorderSide(
                                   width: 0.0,
@@ -278,7 +293,7 @@ class _SignUpState extends State<SignUp> {
                               });
                             },
                           ),
-                          errorText: validate ? null : error,
+                          errorText: validate ? null : passwordError,
                           errorBorder: OutlineInputBorder(
                               borderSide: BorderSide(
                                   width: 0.0,
@@ -327,11 +342,15 @@ class _SignUpState extends State<SignUp> {
                     margin: EdgeInsets.symmetric(horizontal: 20),
                     child: Neumorphic(
                       child: TextFormField(
+                        controller: _confirmPasswordController,
                         validator: (value) {
-                          if (_password.text == value) {
-                            return null;
-                          }
-                          return "password didn't match";
+                          // if (_password.text == value) {
+                          //   setState(() {
+                          //     validate = true;
+                          //     passwordError = "confirm password must match the password";
+                          //   });
+                          // }
+                          return null;
                         },
                         decoration: InputDecoration(
                           suffixIcon: IconButton(
@@ -342,7 +361,7 @@ class _SignUpState extends State<SignUp> {
                               });
                             },
                           ),
-                          errorText: validate ? null : error,
+                          errorText: validate ? null : passwordError,
                           errorBorder: OutlineInputBorder(
                               borderSide: BorderSide(
                                   width: 0.0,
@@ -438,37 +457,115 @@ class _SignUpState extends State<SignUp> {
                       ],
                     ),
                   ),
+                  // ElevatedButton(
+                  //     onPressed: () async {
+                  //       _serviceEnabled = await _location.serviceEnabled();
+                  //       if (!_serviceEnabled) {
+                  //         _serviceEnabled = await _location.requestService();
+                  //         if (!_serviceEnabled) {
+                  //           return;
+                  //         }
+                  //       }
+                  //       _permissionGranted = await _location.hasPermission();
+                  //       if (_permissionGranted == loc.PermissionStatus.denied) {
+                  //         _permissionGranted = await _location.requestPermission();
+                  //         if (_permissionGranted != loc.PermissionStatus.granted) {
+                  //           return;
+                  //         }
+                  //       }
+                  //       _locationData = await _location.getLocation();
+                  //       print(_locationData);
+                  //       List<Placemark> list = await placemarkFromCoordinates(_locationData.latitude, _locationData.longitude);
+                  //       print(list[0]);
+                  //     },
+                  //     child: Text(
+                  //       "Get Location"
+                  //     )
+                  // ),
                   Center(
                     child: ElevatedButton(
                       onPressed: () async {
-                        print(tags.toString());
-                        Map<String, dynamic> data = {
-                          'name' : _name.text,
-                          'userName' : _userName.text,
-                          'email': _email.text,
-                          'password' : _password.text,
-                          'tags' : tags
-                        };
-                        print(data);
-                        var response = await http.post('api/user/signup', data);
-                        if (response.statusCode == 201 || response.statusCode == 200) {
-                          Map<String, dynamic> details = json.decode(response.body);
-                          final snackBar = SnackBar(
-                              content: Text("Account created, press OK to login"),
-                            action: SnackBarAction(
-                              label: "OK",
-                              onPressed: () {
-                                Navigator.pushReplacementNamed(context, '/login');
-                              },
-                            ),
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                        } else {
-                          Map<String, dynamic> details = json.decode(response.body);
+                        String value = _password.text;
+                        if (value.length < 8) {
                           setState(() {
                             validate = false;
-                            error = details["message"];
+                            passwordError = "password must be greater than 8";
                           });
+                        }
+                         else if (!(value.contains('!') || value.contains('@') ||
+                            value.contains('#') ||
+                            value.contains('%') || value.contains('^') ||
+                            value.contains('&') || value.contains('*'))) {
+                          setState(() {
+                            validate = false;
+                            passwordError =
+                            "password must contain special characters";
+                          });
+                        }
+                        else if (!(value.contains("0") || value.contains("1") ||
+                            value.contains('2') || value.contains('3') ||
+                            value.contains('4') || value.contains('5') ||
+                            value.contains('6') || value.contains('7') ||
+                            value.contains('8') || value.contains('9'))) {
+                          setState(() {
+                            validate = false;
+                            passwordError = "password must contain number";
+                          });
+                        }
+
+                        value = _email.text;
+                        if (!value.contains("@")) {
+                          setState(() {
+                            validate = false;
+                            emailError = "invalid email, must have @";
+                          });
+                        }
+
+                        if (!(_password.text == _confirmPasswordController.text)) {
+                          setState(() {
+                            validate = false;
+                            passwordError = "confirm password must match the password";
+                          });
+                        }
+
+
+                        print(tags.toString());
+                        Map<String, dynamic> data = {
+                          'name': _name.text,
+                          'userName': _userName.text,
+                          'email': _email.text,
+                          'password': _password.text,
+                          'tags': tags
+                        };
+                        print(data);
+                        if (validate == true) {
+                          var response = await http.post(
+                              'api/user/signup', data);
+                          if (response.statusCode == 201 ||
+                              response.statusCode == 200) {
+                            Map<String, dynamic> details = json.decode(
+                                response.body);
+                            final snackBar = SnackBar(
+                              content: Text(
+                                  "Account created, press OK to login"),
+                              action: SnackBarAction(
+                                label: "OK",
+                                onPressed: () {
+                                  Navigator.pushReplacementNamed(
+                                      context, '/login');
+                                },
+                              ),
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                snackBar);
+                          } else {
+                            Map<String, dynamic> details = json.decode(
+                                response.body);
+                            setState(() {
+                              validate = false;
+                              error = details["message"];
+                            });
+                          }
                         }
                       },
                       child: Text(

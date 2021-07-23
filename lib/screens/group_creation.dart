@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:ui';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:grup/bloc/application_bloc.dart';
 import 'package:grup/services/customLocation.dart';
@@ -12,16 +11,17 @@ import 'package:location/location.dart' as loc;
 import 'package:grup/networkHandler.dart';
 import 'package:provider/provider.dart';
 
-class BroadcastCreation extends StatefulWidget {
+class GroupCreation extends StatefulWidget {
   @override
-  _BroadcastCreationState createState() => _BroadcastCreationState();
+  _GroupCreationState createState() => _GroupCreationState();
 }
 
-class _BroadcastCreationState extends State<BroadcastCreation> {
+class _GroupCreationState extends State<GroupCreation> {
   String text = "";
   bool tick = false;
   List<String> tags = [];
   TextEditingController _controller = TextEditingController();
+  TextEditingController _nameController = TextEditingController();
   TextEditingController _tagsController = TextEditingController();
   bool _serviceEnabled;
   loc.Location _location = loc.Location();
@@ -33,7 +33,6 @@ class _BroadcastCreationState extends State<BroadcastCreation> {
   dynamic Longitude;
   dynamic address;
   String selectedAddress = "";
-  int dropdownValue = 24;
 
   @override
   Widget build(BuildContext context) {
@@ -44,19 +43,19 @@ class _BroadcastCreationState extends State<BroadcastCreation> {
       backgroundColor: Colors.blue[50],
       appBar: AppBar(
         iconTheme: IconThemeData(
-          color: Colors.blue
+            color: Colors.blue
         ),
         backgroundColor: Colors.yellow[300],
         title: Text(
-          'Create Broadcast',
+          'Create Group',
           style: TextStyle(
-            color: Colors.blue
+              color: Colors.blue
           ),
         ),
         actions: [
           IconButton(
             icon: Icon(
-              Icons.location_searching_rounded
+                Icons.location_searching_rounded
             ),
             onPressed: () {},
           )
@@ -65,14 +64,14 @@ class _BroadcastCreationState extends State<BroadcastCreation> {
       body: GestureDetector(
         onTap: () {
           FocusScope.of(context).requestFocus(new FocusNode());
-          },
+        },
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ListTile(
                 title: NeumorphicText(
-                  "What do you want to talk about???",
+                  "What is this group about???",
                   style: NeumorphicStyle(
                     depth: 0,  //customize depth here
                     color: Colors.black, //customize color here
@@ -80,6 +79,28 @@ class _BroadcastCreationState extends State<BroadcastCreation> {
                   textStyle: NeumorphicTextStyle(
                     fontSize: 22,
                     fontFamily: 'ArchitectsDaughter-Regular.ttf',
+                  ),
+                ),
+              ),
+              Container(
+                margin: EdgeInsets.all(4.0),
+                child: Neumorphic(
+                  child: TextFormField(
+                    //enabled: false,
+                    controller: _nameController,
+                    maxLines: null,
+                    keyboardType: TextInputType.multiline,
+                    decoration: InputDecoration(
+                      fillColor: Colors.white,
+                      filled: true,
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color: Colors.blue
+                        ),
+                        borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                      ),
+                      hintText: "Name of your Group",
+                    ),
                   ),
                 ),
               ),
@@ -96,18 +117,18 @@ class _BroadcastCreationState extends State<BroadcastCreation> {
                       filled: true,
                       enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(
-                          color: Colors.blue
+                            color: Colors.blue
                         ),
                         borderRadius: BorderRadius.all(Radius.circular(10.0)),
                       ),
-                      hintText: "I had this crazy idea...",
+                      hintText: "My aim for this group is...",
                     ),
                   ),
                 ),
               ),
               Neumorphic(
                 style: NeumorphicStyle(
-                  shadowDarkColor: Colors.black
+                    shadowDarkColor: Colors.black
                 ),
                 child: Card(
                   child: Column(
@@ -115,22 +136,22 @@ class _BroadcastCreationState extends State<BroadcastCreation> {
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       ListTile(
-                        title: Text(
-                          "Tags",
-                          style: TextStyle(
-                            fontFamily: 'ArchitectsDaughter-Regular.ttf',
-                            fontSize: 28
-                          ),
-                        )
+                          title: Text(
+                            "Tags",
+                            style: TextStyle(
+                                fontFamily: 'ArchitectsDaughter-Regular.ttf',
+                                fontSize: 28
+                            ),
+                          )
                       ),
                       Wrap(
                         crossAxisAlignment: WrapCrossAlignment.start,
                         children: tags.map((x) => InkWell(
-                          onTap: () {
-                            setState(() {
-                              tags.remove(x);
-                            });
-                          },
+                            onTap: () {
+                              setState(() {
+                                tags.remove(x);
+                              });
+                            },
                             child: Tag(text: x))).toList(),
                       ),
                       Container(
@@ -140,14 +161,14 @@ class _BroadcastCreationState extends State<BroadcastCreation> {
                           controller: _tagsController,
                           textAlign: TextAlign.left,
                           decoration: InputDecoration(
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: Colors.blue
+                              enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      color: Colors.blue
+                                  ),
+                                  borderRadius: BorderRadius.all(Radius.circular(20.0))
                               ),
-                              borderRadius: BorderRadius.all(Radius.circular(20.0))
-                            ),
-                            contentPadding: EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            hintText: 'Enter a Tag name'
+                              contentPadding: EdgeInsets.fromLTRB(20, 0, 20, 0),
+                              hintText: 'Enter a Tag name'
                           ),
                           // onChanged: (text) {
                           //   this.text = text;
@@ -156,13 +177,13 @@ class _BroadcastCreationState extends State<BroadcastCreation> {
                       ),
                       Neumorphic(
                         style: NeumorphicStyle(
-                          color: Colors.white,
-                          shadowDarkColor: Colors.blue
+                            color: Colors.white,
+                            shadowDarkColor: Colors.blue
                         ),
                         child: Center(
                           child: TextButton.icon(
                             label: Text(
-                              "Add Tag"
+                                "Add Tag"
                             ),
                             icon: Icon(Icons.add),
                             onPressed: () {
@@ -179,66 +200,13 @@ class _BroadcastCreationState extends State<BroadcastCreation> {
                 ),
               ),
               Neumorphic(
-                style: NeumorphicStyle(
-                    shadowDarkColor: Colors.black
-                ),
-                child: Card(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      ListTile(
-                          title: Text(
-                            "Broadcast Duration",
-                            style: TextStyle(
-                                fontFamily: 'ArchitectsDaughter-Regular.ttf',
-                                fontSize: 28
-                            ),
-                          )
-                      ),
-                      Container(
-                        padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
-                        width: double.infinity,
-                        child: DropdownButton<int>(
-                          value: dropdownValue,
-                          //icon: const Icon(Icons.arrow_downward),
-                          hint: Text(
-                            "Duration in hours"
-                          ),
-                          menuMaxHeight: 500,
-                          iconSize: 24,
-                          elevation: 16,
-                          style: const TextStyle(color: Colors.blueAccent),
-                          underline: Container(
-                            height: 2,
-                            color: Colors.blue,
-                          ),
-                          onChanged: (int newValue) {
-                            setState(() {
-                              dropdownValue = newValue;
-                            });
-                          },
-                          items: <int>[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
-                              .map<DropdownMenuItem<int>>((int value) {
-                            return DropdownMenuItem<int>(
-                              value: value,
-                              child: Text(value.toString()),
-                            );
-                          }).toList(),
-                      ),
-                      )
-                    ],
-                  ),
-                ),
-              ),
-              Neumorphic(
                 margin: EdgeInsets.fromLTRB(10, 10, 10, 0),
                 style: NeumorphicStyle(
-                  color: Colors.blue[200]
+                    color: Colors.blue[200]
                 ),
                 child: CheckboxListTile(
                   title: Text(
-                    'Go Anonymous'
+                      'Go Anonymous'
                   ),
                   onChanged: (tick) {
                     setState(() {
@@ -251,15 +219,15 @@ class _BroadcastCreationState extends State<BroadcastCreation> {
               SizedBox(height: 10,),
               selectedAddress != "" ? Container(
                 //color: Colors.white,
-                  height: 50,
-                  decoration: BoxDecoration(
+                height: 50,
+                decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.all(Radius.circular(20.0))
-                  ),
-                  width: MediaQuery.of(context).size.width,
+                ),
+                width: MediaQuery.of(context).size.width,
                 child: Center(
                   child: Text(
-                      selectedAddress,
+                    selectedAddress,
                     style: TextStyle(
                       fontSize: 20,
                       //fontWeight: FontWeight.bold
@@ -289,25 +257,20 @@ class _BroadcastCreationState extends State<BroadcastCreation> {
                                 return CustomLocation(isUserLocation: false);
                               }
                           );
-                          print(applicationBloc.broadcastLocation);
-                          print("found location");
-                          print(data);
-                          //print(Location);
-                          Latitude = data["Location"]['lat'];
-                          Longitude = data["Location"]['lng'];
+                          Latitude = data['Location']['lat'];
+                          Longitude = data['Location']['lng'];
                           list = await placemarkFromCoordinates(Latitude, Longitude);
                           address = list[0];
                           setState(() {
-                            selectedAddress = data["title"];
+                            selectedAddress = data['title'];
                           });
-                          print(address);
                         },
                         style: ElevatedButton.styleFrom(
                           primary: Colors.blue[500],
                           padding: EdgeInsets.all(8.0),
                         ),
                         child: Text(
-                          'Choose Location'
+                            'Choose Location'
                         )
                     ),
                   ),
@@ -336,7 +299,7 @@ class _BroadcastCreationState extends State<BroadcastCreation> {
                           list = await placemarkFromCoordinates(_locationData.latitude, _locationData.longitude);
                           address = list[0];
                           setState(() {
-                            selectedAddress = "Your Current Location";
+                            selectedAddress = "Your Location";
                           });
                         },
                         style: ElevatedButton.styleFrom(
@@ -354,43 +317,44 @@ class _BroadcastCreationState extends State<BroadcastCreation> {
                 child: Container(
                   margin: EdgeInsets.all(10.0),
                   child: ElevatedButton.icon(
-                      onPressed: () async {
-                        Map<String, dynamic> data = {
-                          'content': _controller.text,
-                          'tags': tags,
-                          'Latitude': Latitude,
-                          'Longitude': Longitude,
-                          'address' : address,
-                          'duration' : dropdownValue
-                        };
-                        var response = await http.post('api/createBroadcast', data);
-                        print(json.decode(response.body));
-                        tags.clear();
-                        selectedAddress = "";
-                        _tagsController.clear();
-                        _controller.clear();
-                        final snackBar = SnackBar(
-                          content: Text("Broadcast created, press OK to see your broadcasts"),
-                          action: SnackBarAction(
-                            label: "OK",
-                            onPressed: () {
-                              Navigator.pop(context);
-                              //Navigator.pushReplacementNamed(context, '/login');
-                            },
-                          ),
-                        );
-                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        primary: Colors.yellow[300],
-                        onPrimary: Colors.blue,
-                        padding: EdgeInsets.all(8.0),
-                      ),
+                    onPressed: () async {
+                      Map<String, dynamic> data = {
+                        'name' : _nameController.text,
+                        'content': _controller.text,
+                        'tags': tags,
+                        'Latitude': Latitude,
+                        'Longitude': Longitude,
+                        'address' : address
+                      };
+                      var response = await http.post('api/createGroup', data);
+                      print(json.decode(response.body));
+                      _nameController.clear();
+                      tags.clear();
+                      selectedAddress = "";
+                      _tagsController.clear();
+                      _controller.clear();
+                      final snackBar = SnackBar(
+                        content: Text("Broadcast created, press OK to see your broadcasts"),
+                        action: SnackBarAction(
+                          label: "OK",
+                          onPressed: () {
+                            Navigator.pop(context);
+                            //Navigator.pushReplacementNamed(context, '/login');
+                          },
+                        ),
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.yellow[300],
+                      onPrimary: Colors.blue,
+                      padding: EdgeInsets.all(8.0),
+                    ),
                     icon: Icon(
-                      Icons.offline_bolt_sharp
+                        Icons.offline_bolt_sharp
                     ),
                     label: Text(
-                      "Broadcast"
+                        "Broadcast"
                     ),
                   ),
                 ),

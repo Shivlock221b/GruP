@@ -18,31 +18,30 @@ import 'package:socket_io_client/socket_io_client.dart';
 
 import '../tags.dart';
 
-class BroadCasts extends StatefulWidget {
+class EventBroadCasts extends StatefulWidget {
 
   //List<Location> list = [];
 
   @override
-  _BroadCastsState createState() => _BroadCastsState();
+  _EventBroadCastsState createState() => _EventBroadCastsState();
 }
 
-class _BroadCastsState extends State<BroadCasts> {
+class _EventBroadCastsState extends State<EventBroadCasts> {
   Socket socket;
   NetworkHandler http = NetworkHandler();
-  List<dynamic> broadcasts = [];
+  List<dynamic> events = [];
   ScrollController _scrollController = ScrollController();
   bool ready = false;
   bool clicked = false;
   double _value = 500.0;
-  Map<String, dynamic> user;
   //LocationData _locationData;
   Map<String, dynamic> _locationData;
   @override
   void initState() {
-    getBroadcasts().then((broadcastList) {
-      print(broadcastList);
+    getEvents().then((eventList) {
+      print(eventList);
       setState(() {
-        broadcasts = broadcastList;
+        events = eventList;
         ready = true;
       });
     });
@@ -51,11 +50,11 @@ class _BroadCastsState extends State<BroadCasts> {
 
   }
 
-  Future<List<dynamic>> getBroadcasts() async {
-    var response = await http.get('api/getBroadcasts');
+  Future<List<dynamic>> getEvents() async {
+    var response = await http.get('api/getEvents');
     Map<String, dynamic> data = json.decode(response.body);
     print(data['message']);
-    return data['broadcasts'];
+    return data['events'];
   }
 
   @override
@@ -65,7 +64,6 @@ class _BroadCastsState extends State<BroadCasts> {
     var applicationBloc = Provider.of<ApplicationBloc>(context);
     _locationData = applicationBloc.selectedLocation;
     socket = data['socket'];
-    user = data['user'];
 
 
     return GestureDetector(
@@ -80,7 +78,7 @@ class _BroadCastsState extends State<BroadCasts> {
           backgroundColor: Colors.yellow[300],
           centerTitle: true,
           title: Text(
-            "Broadcasts",
+            "Event",
             style: TextStyle(
               color: Colors.blue[600],
             ),
@@ -88,14 +86,14 @@ class _BroadCastsState extends State<BroadCasts> {
           actions: [
             IconButton(
                 icon: Icon(
-                  Icons.location_searching
+                    Icons.location_searching
                 ),
                 onPressed: () {
                   setState(() {
                     clicked = true;
                   });
                 }
-                )
+            )
           ],
         ),
         backgroundColor: Colors.blue[50],
@@ -111,12 +109,12 @@ class _BroadCastsState extends State<BroadCasts> {
               height: MediaQuery.of(context).size.height,
               child: ListView.builder(
                   controller: _scrollController,
-                  itemCount: broadcasts.length,
+                  itemCount: events.length,
                   shrinkWrap: true,
                   itemBuilder: (context, index) {
-                    print(broadcasts[index]['content']);
+                    print(events[index]['content']);
                     return Geolocator.distanceBetween(
-                        broadcasts[index]['location']['Latitude'], broadcasts[index]['location']['Longitude'],
+                        events[index]['location']['Latitude'], events[index]['location']['Longitude'],
                         _locationData['latitude'], _locationData['longitude']) <= _value ?
                     InkWell(
                       onTap: () {
@@ -133,7 +131,7 @@ class _BroadCastsState extends State<BroadCasts> {
                               );
                             },
                             pageBuilder: (context, animation1, animation2) {
-                              List<dynamic> tags = broadcasts[index]['tags'];
+                              List<dynamic> tags = events[index]['tags'];
                               // return Material(
                               //   type: MaterialType.transparency,
                               //   child: Align(
@@ -149,26 +147,15 @@ class _BroadCastsState extends State<BroadCasts> {
                               //           child: Column(
                               //             children: [
                               //               InkWell(
-                              //                 onTap: () async {
-                              //                   Map<String, dynamic> data = {
-                              //                     'name': broadcasts[index]['sender']['userName']
-                              //                   };
-                              //                   Response response = await http.post('api/getOwner', data);
-                              //                   print(response.statusCode);
-                              //                   print(response.body);
-                              //                   Map<String, dynamic> map;
-                              //                   map = json.decode(response.body);
-                              //                   print(map);
-                              //                   print("print tagMap");
-                              //                   print(map['tagMap']);
+                              //                 onTap: () {
                               //                   Navigator.push(context, MaterialPageRoute(
                               //                       builder: (builder) {
-                              //                         return ViewProfile(user: map['user'][0], self: map['self'], tags: map['tagMap'], socket: socket, requests: map['request'], friends: map['friends'],);
+                              //                         return ViewProfile();
                               //                       }
                               //                   ));
                               //                 },
                               //                 child: Text(
-                              //                   broadcasts[index]['sender']['userName'],
+                              //                   events[index]['sender']['userName'],
                               //                   style: TextStyle(
                               //                       fontSize: 30,
                               //                       color: Colors.blueAccent
@@ -180,11 +167,17 @@ class _BroadCastsState extends State<BroadCasts> {
                               //               Container(
                               //                 padding: EdgeInsets.all(8.0),
                               //                 child: Text(
-                              //                   broadcasts[index]['content'],
+                              //                   events[index]['content'],
                               //                   style: TextStyle(
                               //                       fontSize: 20,
                               //                       color: Colors.blue
                               //                   ),
+                              //                 ),
+                              //               ),
+                              //               Container(
+                              //                 padding: EdgeInsets.all(8.0),
+                              //                 child: Text(
+                              //                   events[index]['time']
                               //                 ),
                               //               ),
                               //               Divider(),
@@ -197,51 +190,46 @@ class _BroadCastsState extends State<BroadCasts> {
                               //                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               //                 children: [
                               //                   TextButton(
-                              //                     onPressed: () {
-                              //                       setState(() {
-                              //
-                              //                       });
-                              //                     },
+                              //                     onPressed: () {},
                               //                     child: Text(
                               //                         "Endorse"
                               //                     ),
                               //                   ),
                               //                   TextButton(
-                              //                       onPressed: () async {
-                              //                         Map<String, dynamic> creationData = {
-                              //                           "receiver" : broadcasts[index]['sender']['userId'],
-                              //                         };
-                              //                         Response response = await http.post("api/chat", creationData);
-                              //                         Map<String,dynamic> chatDetails = json.decode(response.body);
-                              //                         print("check creator");
-                              //                         print(chatDetails);
-                              //                         if (response.statusCode == 400) {
-                              //                           final snackBar = SnackBar(
-                              //                             content: Text("Chat already exists"),
-                              //                           );
-                              //                           ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                              //                         } else {
-                              //                           applicationBloc.setUser(chatDetails['creator']);
-                              //                           socket.emit("/newChat", chatDetails['receiver']);
-                              //                           print(applicationBloc.user);
-                              //                           await Navigator.push(
-                              //                               context,
-                              //                               MaterialPageRoute(
-                              //                                   builder: (
-                              //                                       builder) =>
-                              //                                       IndividualChat(
-                              //                                         socket: socket,
-                              //                                         data: chatDetails['creator'],
-                              //                                         chat: chatDetails['newChat']['textChain'],
-                              //                                         //socketId: chatDetails['receiver']['socketId'],
-                              //                                         chatId: chatDetails['newChat']['_id'],
-                              //                                         chatName: chatDetails['receiver']['userName'],
-                              //                                       )
-                              //                               ));
-                              //                         }
+                              //                       onPressed: () {
+                              //                         // Map<String, dynamic> creationData = {
+                              //                         //   "receiver" : events[index]['sender']['userId'],
+                              //                         // };
+                              //                         // Response response = await http.post("api/chat", creationData);
+                              //                         // Map<String,dynamic> chatDetails = json.decode(response.body);
+                              //                         // print("check creator");
+                              //                         // print(chatDetails);
+                              //                         // if (response.statusCode == 400) {
+                              //                         //   final snackBar = SnackBar(
+                              //                         //     content: Text("Chat already exists"),
+                              //                         //   );
+                              //                         //   ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                              //                         // } else {
+                              //                         //   applicationBloc.setUser(chatDetails['creator']);
+                              //                         //   print(applicationBloc.user);
+                              //                         //   await Navigator.push(
+                              //                         //       context,
+                              //                         //       MaterialPageRoute(
+                              //                         //           builder: (
+                              //                         //               builder) =>
+                              //                         //               IndividualChat(
+                              //                         //                 socket: socket,
+                              //                         //                 data: chatDetails['creator'],
+                              //                         //                 chat: chatDetails['newChat']['textChain'],
+                              //                         //                 //socketId: chatDetails['receiver']['socketId'],
+                              //                         //                 chatId: chatDetails['newChat']['_id'],
+                              //                         //                 chatName: chatDetails['receiver']['userName'],
+                              //                         //               )
+                              //                         //       ));
+                              //                         // }
                               //                       },
                               //                       child: Text(
-                              //                           "Start Chat"
+                              //                           "RSVP"
                               //                       )
                               //                   ),
                               //                   TextButton(
@@ -268,16 +256,16 @@ class _BroadCastsState extends State<BroadCasts> {
                               //   ),
                               // );
                               return DialogBox(
-                                broadcast: broadcasts[index],
-                                isLocalBroadcasts: true,
+                                broadcast: events[index],
+                                isLocalEvents: true,
                                 socket: socket,
                               );
                             }
                         );
                       },
                       child: BroadCast(
-                        text1: broadcasts[index]['sender']['userName'],
-                        text2: broadcasts[index]['content'],),
+                        text1: events[index]['sender']['userName'],
+                        text2: events[index]['content'],),
                     ) : Container();
                   }
               ),
@@ -287,8 +275,8 @@ class _BroadCastsState extends State<BroadCasts> {
               right: 10,
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.yellow[50],
-                  borderRadius: BorderRadius.all(Radius.circular(45.0))
+                    color: Colors.yellow[50],
+                    borderRadius: BorderRadius.all(Radius.circular(45.0))
                 ),
                 height: 500,
                 width: 100,

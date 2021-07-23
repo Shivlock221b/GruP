@@ -1,4 +1,12 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:grup/bloc/application_bloc.dart';
+import 'package:grup/networkHandler.dart';
+import 'package:http/http.dart';
+import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 
 class Settings extends StatefulWidget {
   const Settings({Key key}) : super(key: key);
@@ -9,8 +17,15 @@ class Settings extends StatefulWidget {
 
 class _SettingsState extends State<Settings> {
   bool showPassword = false;
+  XFile _image;
+  ImagePicker _picker = ImagePicker();
+  NetworkHandler http = NetworkHandler();
+
   @override
   Widget build(BuildContext context) {
+
+    var applicationBloc = Provider.of<ApplicationBloc>(context, listen: true);
+
     return Scaffold(
       appBar: AppBar(
 
@@ -44,7 +59,8 @@ class _SettingsState extends State<Settings> {
                         shape: BoxShape.circle,
                         image: DecorationImage(
                           fit: BoxFit.cover,
-                          image: AssetImage('assets/photo.jpg'),
+                          image: http.getImage(applicationBloc.user['profilepic'])
+                          ,
                         ),
                       ),
                     ),
@@ -65,7 +81,18 @@ class _SettingsState extends State<Settings> {
                         child: IconButton(
                           icon: Icon(Icons.edit),
                           color: Colors.blue[600],
-                          onPressed: () {},
+                          onPressed: () async {
+                            final XFile image = await _picker.pickImage(source: ImageSource.gallery);
+                            //var response = http.getImage("shivam");
+                            var stream = await http.uploadImage("api/uploadImage", image.path);
+                            print(stream.statusCode);
+                            var response = await Response.fromStream(stream);
+                            applicationBloc.setProfilePicture(json.decode(response.body)['profilepic']);
+                            print(response.body);
+                            // setState(() {
+                            //   _image = image;
+                            // });
+                          },
                         ),
                       ),
                     ),
@@ -77,23 +104,23 @@ class _SettingsState extends State<Settings> {
               ),
               buildTextField(" Name"," Shivam Tiwari",false),
               buildTextField(" Username"," Shivlock221b",false),
-              buildTextField(" Email ID"," shivam.desire@gmail.com",false),
+              buildTextField(" Email ID"," shivam.desire1@gmail.com",false),
               buildTextField(" Password"," ********", true),
               //SizedBox(height:5.0),
-              Row(
-                mainAxisAlignment : MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text("Go Anonymous",
-                    style:TextStyle(
-                      fontSize:16,
-                    ),),
-                  Container(
-                    height:40,
-                    width:80,
-                    child: SliderContainer(),
-                  ),
-                ],
-              ),
+              // Row(
+              //   mainAxisAlignment : MainAxisAlignment.spaceBetween,
+              //   children: <Widget>[
+              //     Text("Go Anonymous",
+              //       style:TextStyle(
+              //         fontSize:16,
+              //       ),),
+              //     Container(
+              //       height:40,
+              //       width:80,
+              //       child: SliderContainer(),
+              //     ),
+              //   ],
+              // ),
               SizedBox(height:25.0),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

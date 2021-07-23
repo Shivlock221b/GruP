@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
 import 'package:logger/logger.dart';
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NetworkHandler {
-  String baseUrl = '10.120.8.146:3000';
+  //String baseUrl = '10.120.8.146:3000';
+  String baseUrl = "172.31.75.147:3000";
   //String baseUrl = 'grup-backend.herokuapp.com';
   var logger = Logger();
   FlutterSecureStorage storage = FlutterSecureStorage();
@@ -16,22 +18,29 @@ class NetworkHandler {
   //   "password": "Welcometo321@"
   // };
 
-  // Future get(String url) async {
-  //   print("plss");
-  //   String token = await storage.read(key: "token");
-  //   //url = formater(url);
-  //   var uri = Uri.https(baseUrl, 'api/getInfo');
-  //   print(token);
-  //   var response = await http.get(
-  //     uri,
-  //     headers: {'Authorization': 'jwt $token'}
-  //   );
-  //   print(response.statusCode);
-  //   logger.i(response.statusCode);
-  //   logger.i(response.body);
-  //   logger.i(json.decode(response.body));
-  //   print(response.statusCode);
-  // }
+  Future<http.Response> get(String url) async {
+    print("plss");
+    //String token = await storage.read(key: "token");
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String shared = prefs.getString('token');
+    //url = formater(url);
+    var uri = Uri.http(baseUrl, url);
+    //print(token);
+    Response response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        "Accept": "application/json",
+        'Authorization': 'jwt $shared'
+      }
+    );
+    print(response.statusCode);
+    logger.i(response.statusCode);
+    logger.i(response.body);
+    //logger.i(json.decode(response.body));
+    print(response.statusCode);
+    return response;
+  }
 
   Future<http.Response> post(String url, Map<String, dynamic> data) async {
     print("hello");
@@ -41,7 +50,7 @@ class NetworkHandler {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String shared = prefs.getString('token');
     print(shared);
-    String token = await storage.read(key: "token");
+    //String token = await storage.read(key: "token");
     //await storage.write(key: "token", value: token);
     //url = formater(url);
     var uri = Uri.http(baseUrl, url);
@@ -51,47 +60,49 @@ class NetworkHandler {
       headers: {
     'Content-Type': 'application/json; charset=UTF-8',
     "Accept": "application/json",
-    "Authorization" : "jwt $token"
+    "Authorization" : "jwt $shared"
     },
         body:jsonEncode(<String, dynamic>{
           "data" : data
         })
     );
     logger.i(response.statusCode);
-    dynamic res = json.decode(response.body);
-    logger.i(res);
-    print(res['message']);
-    storage.write(key: "token", value: res['token']);
+    //dynamic res = json.decode(response.body);
+    //logger.i(res);
+    //print(res['message']);
+    //storage.write(key: "token", value: res['token']);
     return response;
   }
 
-  Future<http.Response> patchTags(String url, List<dynamic> data) async {
+  Future<http.Response> patch(String url, Map<String, dynamic> data) async {
     print(data.toString());
     var uri = Uri.http(baseUrl, url);
     //print(uri);
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String shared = prefs.getString('token');
     var response = await http.patch(
       uri,
       headers: {
         'Content-Type': 'application/json; charset=UTF-8',
         "Accept": "application/json",
-        'Authorization' : "jwt"},
-      body: jsonEncode(<String, List<dynamic>>{
-        "tags": data
+        'Authorization' : "jwt $shared"},
+      body: jsonEncode(<String, Map<String, dynamic>>{
+        "data": data
       })
     );
     logger.i(response.statusCode);
-    logger.i(json.decode(response.body));
+    //logger.i(json.decode(response.body));
     return response;
   }
 
-  Future<http.Response> getChats(String url, String chatId, String userName) async {
+  Future<http.Response> getChats(String url, String chatId, List<String> userName) async {
     var uri = Uri.http(baseUrl, url);
     print(await storage.read(key: "token"));
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String shared = prefs.getString('token');
     print(shared);
-    String token = await storage.read(key: "token");
-    print("jwt $token");
+    //String token = await storage.read(key: "token");
+    //print("jwt $token");
     print(uri);
     var response = await http.post(
       uri,
@@ -100,13 +111,13 @@ class NetworkHandler {
         "Accept": "application/json",
         "Authorization" : "jwt $shared"
       },
-      body: jsonEncode(<String, String>{
+      body: jsonEncode(<String, dynamic>{
         'chatId' : chatId,
         'userName' : userName
       })
     );
-    logger.i(response);
-    logger.i(json.decode(response.body));
+    logger.i(response.body);
+    //logger.i(json.decode(response.body));
     return response;
   }
 
@@ -117,8 +128,8 @@ class NetworkHandler {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String shared = prefs.getString('token');
     print(shared);
-    print(await storage.read(key: "token"));
-    String token = await storage.read(key: "token");
+    //print(await storage.read(key: "token"));
+    //String token = await storage.read(key: "token");
     //await storage.write(key: "token", value: token);
     //url = formater(url);
     var uri = Uri.http(baseUrl, url);
@@ -135,10 +146,30 @@ class NetworkHandler {
         })
     );
     logger.i(response.statusCode);
-    dynamic res = json.decode(response.body);
-    logger.i(res);
-    print(res['message']);
-    storage.write(key: "token", value: res['token']);
+    //dynamic res = json.decode(response.body);
+    //logger.i(res);
+    //print(res['message']);
+    //storage.write(key: "token", value: res['token']);
+    return response;
+  }
+
+  NetworkImage getImage(String url) {
+    var uri = Uri.http(baseUrl, url);
+    print(uri.toString());
+    return NetworkImage(uri.toString());
+  }
+
+  Future<http.StreamedResponse> uploadImage(String url, String filepath) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String shared = prefs.getString("token");
+    var uri = Uri.http(baseUrl, url);
+    var request = http.MultipartRequest("PATCH", uri);
+    request.files.add(await http.MultipartFile.fromPath("profilepic", filepath));
+    request.headers.addAll({
+      "Content-type": "multipart/form-data",
+      "Authorization": "jwt $shared"
+    });
+    var response = request.send();
     return response;
   }
 }

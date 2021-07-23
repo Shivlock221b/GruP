@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:grup/Pages/IndividualChat.dart';
+import 'package:grup/bloc/application_bloc.dart';
 import 'package:grup/networkHandler.dart';
 import 'package:grup/services/ChatCard.dart';
+import 'package:provider/provider.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
 class Chats extends StatefulWidget {
@@ -14,73 +16,54 @@ class Chats extends StatefulWidget {
   final Socket socket;
   final Map<String, dynamic> thisPage;
   @override
-  _ChatsState createState() => _ChatsState(this.thisPage);
+  _ChatsState createState() => _ChatsState(this.thisPage, this.socket);
 }
 
 class _ChatsState extends State<Chats> {
-  List<String> chats = [];
+  List<dynamic> chats = [];
   dynamic data;
   bool isPressed = false;
-
+  Socket socket;
   Map<String,dynamic> thisPage;
   //_ChatsState(this.thisPage) ;
+  int count = 0;
 
   NetworkHandler http = NetworkHandler();
-  List<String> filteredChats = [];
+  List<dynamic> filteredChats = [];
   TextEditingController _searchText = TextEditingController();
   String input = "";
 
   @override
   void initState() {
-    super.initState();
+
 
       print(widget.thisPage['_id']);
-      widget.socket.emit('signin', widget.thisPage['_id']);
-    }
-    //     //print(data);
-    //     this.data = data;
-    //     this.chats = data['chats'].keys.toList();
-    //     this.filteredChats = this.chats;
-    //   }))
-    // });
-    //print(this.data);
 
-  _ChatsState(this.thisPage) {
-      // widget.socket.on('/chats', (data) {
-      //   print(data);
-      // });
-    
-    this.data = thisPage;
-    this.chats = data['chats'].keys.toList().length == 0 ? [] : data['chats'].keys.toList();
-    // chats = this.thisPage.keys.toList();
-    // data = this.thisPage;
-    //print(thisPage);
-    _searchText.addListener(() {
-      if (_searchText.text.isEmpty) {
-        setState(() {
-          input = "";
-          filteredChats = chats;
-        });
-      } else {
-        setState(() {
-          input = _searchText.text;
-        });
-      }
-    });
-  }
+
+      super.initState();
+    }
+
+    @override
+    void didChangeDependencies() {
+     super.didChangeDependencies();
+    }
+
+  _ChatsState(this.thisPage, this.socket);
 
 
   @override
   Widget build(BuildContext context) {
-    // widget.socket.onConnect((data) => {
-    //   widget.socket.on('/chats', (data) => setState(() {
-    //     //print(data);
-    //     this.data = data;
-    //     this.chats = data['chats'].keys.toList();
-    //     this.filteredChats = this.chats;
-    //   }))
-    // });
-    //print(this.chats);
+
+    var applicationBloc = Provider.of<ApplicationBloc>(context);
+    print(applicationBloc.user['chats']);
+    this.data = applicationBloc.user;
+    print("inside chats");
+    print(this.data);
+    //this.data = thisPage;
+    //this.chats = data['chats'].keys.toList().length == 0 ? [] : data['chats'].keys.toList();
+    this.chats = data['chats'].length == 0 ? [] : data['chats'];
+    this.filteredChats = this.chats;
+
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).requestFocus(new FocusNode());
@@ -108,7 +91,12 @@ class _ChatsState extends State<Chats> {
             itemBuilder: (BuildContext context) {
               return [
                 PopupMenuItem(
-                  child: Text("New group"),
+                  child: InkWell(
+                    child: Text("New group"),
+                    onTap: () {
+                      print(applicationBloc.user);
+                      },
+                    ),
                   value: "New group",
                 ),
                 PopupMenuItem(
@@ -143,7 +131,7 @@ class _ChatsState extends State<Chats> {
                 // ),
                 Container(
                   margin: EdgeInsets.symmetric(horizontal: 10),
-                  width: MediaQuery.of(context).size.width - 20,
+                  width: 370,
                   child: Neumorphic(
                     style: NeumorphicStyle(
                         boxShape: NeumorphicBoxShape.roundRect(BorderRadius.all(Radius.circular(20))),
@@ -168,72 +156,86 @@ class _ChatsState extends State<Chats> {
                         contentPadding: EdgeInsets.symmetric(horizontal: 20.0),
                         hintText: "Search for a textChain"
                       ),
+                      onChanged: (text) {
+                        filteredChats = this.chats;
+                          if (text.isNotEmpty) {
+                          List<dynamic> tempList = [];
+                          for (int i = 0; i < filteredChats.length; i++) {
+                            if (filteredChats[i]['name'].toLowerCase().contains(text.toLowerCase())) {
+                              tempList.add(filteredChats[i]);
+                              }
+                          }
+                          setState(() {
+                            filteredChats = tempList;
+                          });
+                          }
+                          if (text.isEmpty) {
+                            setState(() {
+                              filteredChats = this.chats;
+                            });
+                          }
+                      }
                     ),
                   ),
                 ),
-                // PopupMenuButton<String>(
-                //   onSelected: (value) {
-                //     print(value);
-                //   },
-                //   itemBuilder: (BuildContext context) {
-                //     return [
-                //       PopupMenuItem(
-                //         child: Text("New group"),
-                //         value: "New group",
-                //       ),
-                //       PopupMenuItem(
-                //         child: Text("New broadcast"),
-                //         value: "New broadcast",
-                //       ),
-                //       PopupMenuItem(
-                //         child: Text("Whatsapp Web"),
-                //         value: "Whatsapp Web",
-                //       ),
-                //       PopupMenuItem(
-                //         child: Text("Starred messages"),
-                //         value: "Starred messages",
-                //       ),
-                //       PopupMenuItem(
-                //         child: Text("Settings"),
-                //         value: "Settings",
-                //       ),
-                //     ];
-                //   },
-                // )
               ],
             ),
             Divider(height: 10, thickness: 1,),
-            _searchText.text.isEmpty ? Expanded(
+            //input.isEmpty ?
+            Expanded(
               flex: 2,
               child: ListView.builder(
 
-                itemCount: chats.length,
+                //itemCount: chats.length,
+                itemCount: filteredChats.length,
                 shrinkWrap: true,
                   itemBuilder: (context, index) {
-                    return InkWell(
+                    return filteredChats[index]['members'].length > 0 ? InkWell(
                       onTap: () async {
                         if (!isPressed) {
                           setState(() {
                             isPressed = true;
                           });
-                          print(data['chats'][chats[index]]);
+                          // applicationBloc.setCounterNull(filteredChats[index]['chatId']);
+                          // applicationBloc.setUserCounter(filteredChats[index]['count']);
+                          print(filteredChats[index]['chatId']);
+                          String chatId = filteredChats[index]['chatId'];
+                          print("check chat problem");
+                          print(filteredChats[index]);
+                          String chatName = filteredChats[index]['name'];
                           var response = await http.getChats(
-                              'api/chats', data['chats'][chats[index]],
-                              chats[index]);
+                              'api/chats', filteredChats[index]['chatId'],
+                              filteredChats[index]["members"].keys.toList());
                           List<dynamic> textChain = json.decode(
                               response.body)['textChain'];
-                          String socketId = json.decode(
-                              response.body)['socketId'];
-                          print(socketId);
+                          Map<String, dynamic> socketIds = json.decode(
+                              response.body)['socketIds'];
+                          print(socketIds);
+                          //widget.socket.emit('/socketId', socketId);
+                          List<dynamic> ids = socketIds.values.toList();
+                          print(socketIds.values);
+                          Map<String, dynamic> onlineData = {
+                            "socketIds" : ids,
+                            "chatName" : chatName,
+                            "sender" : data['userName']
+                          };
+
+                          Map<String, dynamic> updateSocket = {
+                            "chatName" : chatName,
+                            "socketIds" : socketIds
+                          };
+                          //applicationBloc.setUser(data);
+                          applicationBloc.setIds(updateSocket);
+                          socket.emit("/online", onlineData);
                           await Navigator.push(context, MaterialPageRoute(
                               builder: (builder) =>
                                   IndividualChat(
                                       socket: widget.socket,
                                       data: this.data,
                                       chat: textChain,
-                                      socketId: socketId,
-                                      chatId: data['chats'][chats[index]],
-                                      chatName: chats[index]
+                                      socketIds: ids,
+                                      chatId: chatId,
+                                      chatName: chatName
                                   )));
                           //print(json.decode(response.body)['textChain']);
                           //print(chats[index]);
@@ -242,11 +244,12 @@ class _ChatsState extends State<Chats> {
                           isPressed = false;
                         });
                       },
-                        child: ChatCard(chatName: chats[index])
-                    );
+                        //child: ChatCard(chatName: chats[index])
+                        child: ChatCard(chatName: filteredChats[index]['name']),
+                    ) : Container();
                   },
                   ),
-            ) : searchListBuilder()
+            ) //: searchListBuilder()
           ],
         ),
       ),
@@ -270,15 +273,15 @@ class _ChatsState extends State<Chats> {
           return InkWell(
               onTap: () async {
                 print(data['chats'][filteredChats[index]]);
-                var response = await http.getChats('api/chats', data['chats'][filteredChats[index]], filteredChats[index]);
+                var response = await http.getChats('api/chats', filteredChats[index]['chatId'], filteredChats[index]['members']);
                 List<dynamic> textChain = json.decode(response.body)['textChain'];
-                String socketId = json.decode(response.body)['socketId'];
+                List<String> socketId = json.decode(response.body)['socketId'];
                 print(socketId);
                 Navigator.push(context, MaterialPageRoute(builder: (builder) => IndividualChat(
                     socket: widget.socket,
                     data: this.data,
                     chat: textChain,
-                    socketId: socketId,
+                    socketIds: socketId,
                     chatId: data['chats'][filteredChats[index]],
                     chatName : filteredChats[index]
                 )));

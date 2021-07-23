@@ -1,9 +1,15 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
+import 'package:grup/bloc/application_bloc.dart';
 import 'package:grup/networkHandler.dart';
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:grup/profile_page.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:location/location.dart' as loc;
 
 class Login extends StatefulWidget {
   const Login({Key key}) : super(key: key);
@@ -22,9 +28,14 @@ class _LoginState extends State<Login> {
   bool validate = false;
   String error = "";
   bool showpass = true;
+  bool _serviceEnabled;
+  loc.Location _location = loc.Location();
+  loc.PermissionStatus _permissionGranted;
+  loc.LocationData _locationData;
 
   @override
   Widget build(BuildContext context) {
+    var applicationBloc = Provider.of<ApplicationBloc>(context);
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).requestFocus(new FocusNode());
@@ -175,6 +186,28 @@ class _LoginState extends State<Login> {
                 Center(
                   child: ElevatedButton(
                     onPressed: () async {
+                      String value = _password.text;
+                      if (value.length < 8) {
+                        setState(() {
+                          validate = false;
+                          error = "password must be greater than 8";
+                        });
+                      };
+                      if (!(value.contains('!') || value.contains('@') || value.contains('#') ||
+                          value.contains('%') || value.contains('^') || value.contains('&') || value.contains('*'))) {
+                       setState(() {
+                         validate = false;
+                         error = "password must contain special characters";
+                       });
+                      }
+                      if (!(value.contains("0") || value.contains("1") || value.contains('2') || value.contains('3') ||
+                          value.contains('4') || value.contains('5') || value.contains('6') || value.contains('7') ||
+                          value.contains('8') || value.contains('9'))) {
+                        setState(() {
+                          validate = false;
+                          error = "password must contain number";
+                        });
+                      }
                       setState(() {
                         data = {
                           'userName' : _username.text,
@@ -185,16 +218,24 @@ class _LoginState extends State<Login> {
                       //print(response.statusCode);
                       if (response.statusCode == 200 || response.statusCode == 201) {
                         Map<String, dynamic> details = json.decode(response.body);
+                        //applicationBloc.setUser(details['queryUser'][0]);
                         await storage.write(key: "token", value: details['token']);
                         SharedPreferences prefs = await SharedPreferences.getInstance();
                         prefs.setString('token', details['token']);
-                        Navigator.pushReplacementNamed(context, '/profilePage', arguments: json.decode(response.body));
+                        Navigator.pop(context);
+                        //Navigator.pushReplacementNamed(context, '/profilePage', arguments: json.decode(response.body));
+                        Navigator.pushReplacement(context, MaterialPageRoute(
+                            builder: (builder) => ProfilePage(
+                              user: details['queryUser'][0]
+                            )
+                        ));
                       } else {
                         Map<String, dynamic> details = json.decode(response.body);
                         setState(() {
                           validate = false;
                           error = details["message"];
                         });
+                        //applicationBloc.setLogin();
                       }
                     },
                     child: Text(

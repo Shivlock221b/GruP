@@ -4,6 +4,8 @@
     <application
         android:label="grup"
         android:icon="@mipmap/ic_launcher">
+        <meta-data android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyAvThjEeW5JbyevOqO7VJIczSKLmIEs7Xw"/>
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"

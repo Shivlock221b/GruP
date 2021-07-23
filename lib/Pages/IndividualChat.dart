@@ -3,28 +3,30 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
+import 'package:grup/bloc/application_bloc.dart';
 import 'package:grup/message.dart';
 import 'package:grup/networkHandler.dart';
+import 'package:provider/provider.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
 
 class IndividualChat extends StatefulWidget {
-  const IndividualChat({Key key, this.socket, this.data, this.chat, this.socketId, this.chatId, this.chatName}) : super(key: key);
+  const IndividualChat({Key key, this.socket, this.data, this.chat, this.socketIds, this.chatId, this.chatName}) : super(key: key);
   final Socket socket;
   final dynamic data;
   final List<dynamic> chat;
-  final String socketId;
+  final List<dynamic> socketIds;
   final String chatId;
   final String chatName;
   @override
-  _IndividualChatState createState() => _IndividualChatState(this.socket, this.data, this.chat, this.socketId, this.chatId);
+  _IndividualChatState createState() => _IndividualChatState(this.socket, this.data, this.chat, this.chatId);
 }
 
 class _IndividualChatState extends State<IndividualChat> {
   dynamic data;
   Socket socket;
-  List<dynamic> chat;
-  String socketId;
+  List<dynamic> chat = [];
+  Map<String, dynamic> socketIds;
   String chatId;
   ScrollController _scrollController = ScrollController();
   NetworkHandler http = NetworkHandler();
@@ -35,78 +37,59 @@ class _IndividualChatState extends State<IndividualChat> {
   @override
   void initState() {
     super.initState();
-    print(data);
-    //List<dynamic> list = data['chats'].keys.toList();
-    //list.add("user5");
-    //print(list);
-    print(chat);
-    // http.getChats('api/chats').then((value) => {
-    //   //print(json.decode(value.body))
-    // });
-
-    print("heloooooo");
-    //receive();
-    connect();
   }
 
-  void connect() {
-    // MessageModel messageModel = MessageModel(sourceId: widget.sourceChat.id.toString(),targetId: );
-    // socket = IO.io("http://192.168.0.106:5000", <String, dynamic>{
-    //   "transports": ["websocket"],
-    //   "autoConnect": false,
-    // });
-    //socket.connect();
-    //socket.emit("signin", widget.sourchat.id);
-      print("Connected");
-      // socket.on("receive", (msg) {
-      //   print(msg);
-      //   //setMessage("destination", msg);
-      //   setState(() {
-      //     chat.add(msg);
-      //   });
-      //   _scrollController.animateTo(_scrollController.position.maxScrollExtent,
-      //       duration: Duration(milliseconds: 300), curve: Curves.easeOut);
-      // });
-    print(socket.connected);
-  }
-
-  void setMessage(String type, String message) {
-    // MessageModel messageModel = MessageModel(
-    //     type: type,
-    //     message: message,
-    //     time: DateTime.now().toString().substring(10, 16));
-    // print(messages);
-
-    setState(() {
-      chat.add(message);
-    });
-  }
-
-  // void receive() {
-  //   this.socket.on("receive", (message) => setState(() {
-  //
-  //     print(message);
+  // void setMessage(String type, String message) {
+  //   setState(() {
   //     chat.add(message);
-  //   }));
+  //   });
   // }
 
-  _IndividualChatState(this.socket, this.data, this.chat, this.socketId, this.chatId) {
+  _IndividualChatState(this.socket, this.data, this.chat, this.chatId) {
     socket.on("receive", (msg) {
+      print("Hellololololololol");
       print(msg);
-      //setMessage("destination", msg);
       if (mounted) {
         setState(() {
           chat.add(msg);
         });
       }
-
-      // _scrollController.animateTo(_scrollController.position.maxScrollExtent,
-      //     duration: Duration(milliseconds: 300), curve: Curves.easeOut);
     });
   }
 
   @override
   Widget build(BuildContext context) {
+
+    var applicationBloc = Provider.of<ApplicationBloc>(context);
+    this.data = applicationBloc.user;
+    this.socketIds = this.data['chats'].firstWhere((elem) => elem['name'] == widget.chatName, orElse: () => null)['members'];
+    print(this.socketIds);
+    print("inside buildddddddddd");
+    List<String> count = [];
+    dynamic userChat = this.data['chats'].firstWhere((elem) => elem['name'] == widget.chatName, orElse: () => null);
+    userChat['members'].forEach((k, v) => v != null ? count.add(v): count);
+    Map<String, dynamic> senderData = {
+      'socketIds' : count,
+      'chatName': widget.chatName,
+      'sender' : data['userName']
+    };
+    socket.on("online", (data) {
+      print("online inside individual");
+      socket.emit("/replyOnline", senderData);
+    });
+
+    socket.on("notNull", (data) {
+      print("did you see");
+      print(data);
+      socketIds[data['k']] = data['v'];
+    });
+    
+    // socket.on("logOut", (data) {
+    //   setState(() {
+    //     count.remove();
+    //   });
+    // })
+    print(userChat);
     //print(data);
     Timer(
       Duration(milliseconds: 10),
@@ -123,36 +106,72 @@ class _IndividualChatState extends State<IndividualChat> {
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
             onPressed: () {
+              applicationBloc.decreaseCounters(this.chatId);
               Navigator.pop(context);
             },
           ),
           iconTheme: IconThemeData(
             color: Colors.black
           ),
-          title: Text(
-            widget.chatName,
-            style: TextStyle(
-              color: Colors.black
-            ),
+          // title: Text(
+          //   widget.chatName,
+          //   style: TextStyle(
+          //     color: Colors.black
+          //   ),
+          // ),
+          title: Column(
+            children: [
+              Text(
+                widget.chatName,
+                style: TextStyle(
+                  color: Colors.black
+                )
+              ),
+              Text(
+                count.length > 0 ? "online" : ""
+              )
+            ],
           ),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  print(applicationBloc.user);
+                },
+                child: Text(
+                  "Test"
+                )
+            )
+          ],
           centerTitle: true,
         ),
         body: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                shrinkWrap: true,
-                itemCount: chat.length,
-                itemBuilder: (context, index) {
-                  //return Message(isSender: false);
-                  //print(chat[index]["sender"] +""+ data['userName']);
-                  if (chat[index]["sender"] == data['userName']) {
-                    return Message(isSender: true, message: chat[index]['message'],);
-                  }
-                  return Message(isSender: false, message: chat[index]['message'],);
+              child: RefreshIndicator(
+                triggerMode: RefreshIndicatorTriggerMode.onEdge,
+                onRefresh: () async {
+                  Map<String, dynamic> onlineData = {
+                    "socketIds": socketIds.values.toList(),
+                    "chatName": widget.chatName,
+                    "sender": data['userName']
+                  };
+                  socket.emit("/online", onlineData);
                 },
+                child: ListView.builder(
+                  controller: _scrollController,
+                  scrollDirection: Axis.vertical,
+                  shrinkWrap: true,
+                  itemCount: chat.length,
+                  itemBuilder: (context, index) {
+                    //return Message(isSender: false);
+                    //print(chat[index]["sender"] +""+ data['userName']);
+                    if (chat[index]["sender"] == data['userName']) {
+                      return Message(isSender: true, message: chat[index]['message'],);
+                    }
+                    return Message(isSender: false, message: chat[index]['message'],);
+                  },
+                ),
               ),
             ),
             Row(
@@ -198,19 +217,20 @@ class _IndividualChatState extends State<IndividualChat> {
                       child: IconButton(
                         onPressed: () {
                           if (_message.text.length > 0) {
-                            print(this.socketId);
+                            print(this.socketIds);
                             Map<String, dynamic> data =
                             //"socketId" : this.socketId,
                             {
                               "time": DateTime.now().toString(),
                               "sender": this.data['userName'],
-                              "message": _message.text
+                              "message": _message.text,
+                              "chatId" : this.chatId
                             };
                             print(DateTime.now().toString());
                             _message.clear();
                             Map<String, dynamic> messageData = {
                               "messageData": data,
-                              "socketId": this.socketId,
+                              "socketIds": this.socketIds,
                               "chatId": this.chatId
                             };
                             print(data);
