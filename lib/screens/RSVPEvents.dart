@@ -53,7 +53,7 @@ class _RSVPEventsState extends State<RSVPEvents> {
           itemBuilder: (context, index) {
             return InkWell(
               onTap: () async {
-                List<dynamic> data = await showGeneralDialog(
+                dynamic data = await showGeneralDialog(
                     context: context,
                     barrierLabel: "Label",
                     barrierDismissible: true,
@@ -74,9 +74,11 @@ class _RSVPEventsState extends State<RSVPEvents> {
                       );
                     }
                 );
-                setState(() {
-                  events = data;
-                });
+                if (data != null) {
+                  setState(() {
+                    events = data;
+                  });
+                }
               },
               child: BroadCast(
                 text1: events[index]['sender']['userName'],

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:grup/Pages/IndividualChat.dart';
+import 'package:grup/Pages/chat.dart';
 import 'package:grup/bloc/application_bloc.dart';
 import 'package:grup/networkHandler.dart';
 import 'package:grup/profile_page.dart';
@@ -10,7 +11,7 @@ import 'package:grup/navdrawer.dart';
 import 'package:grup/screens/Event_creation.dart';
 import 'package:grup/screens/broadcast_creation.dart';
 import 'package:grup/screens/broadscasts.dart';
-import 'package:grup/screens/chats.dart';
+//import 'package:grup/screens/chats.dart' as chats;
 import 'package:grup/screens/events.dart';
 import 'package:grup/screens/frontpage.dart';
 import 'package:grup/screens/group_creation.dart';
@@ -27,6 +28,7 @@ Map<String, dynamic> user;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NetworkHandler.configure();
   SharedPreferences prefs = await SharedPreferences.getInstance();
   if (prefs.containsKey('token')) {
     print(prefs.getString('token'));
@@ -89,7 +91,8 @@ class _MyAppState extends State<MyApp> {
           '/createEvent' : (context) => EventCreation(),
           '/createGroup' : (context) => GroupCreation(),
           '/eventBroadcasts' : (context) => EventBroadCasts(),
-          '/groupBroadcasts' : (context) => GroupBroadCasts()
+          '/groupBroadcasts' : (context) => GroupBroadCasts(),
+          "/chatPage": (context) => Chats()
         },
       ),
     );

@@ -3,13 +3,17 @@ import 'dart:ui';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:grup/bloc/application_bloc.dart';
 import 'package:grup/services/customLocation.dart';
+import 'package:grup/services/searchTags.dart';
 import 'package:grup/tags.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:http/http.dart';
 import 'package:location/location.dart' as loc;
 import 'package:grup/networkHandler.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+
 
 class GroupCreation extends StatefulWidget {
   @override
@@ -33,6 +37,8 @@ class _GroupCreationState extends State<GroupCreation> {
   dynamic Longitude;
   dynamic address;
   String selectedAddress = "";
+  ImagePicker _picker = ImagePicker();
+  String imageUrl = "public/icon.png";
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +75,49 @@ class _GroupCreationState extends State<GroupCreation> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              ListTile(
+                title: NeumorphicText(
+                  "Add A Group Profile Pic",
+                  style: NeumorphicStyle(
+                    depth: 0,  //customize depth here
+                    color: Colors.black, //customize color here
+                  ),
+                  textStyle: NeumorphicTextStyle(
+                    fontSize: 22,
+                    fontFamily: 'ArchitectsDaughter-Regular.ttf',
+                  ),
+                ),
+                subtitle: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      margin: EdgeInsets.all(8),
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.blueAccent,
+                        backgroundImage: http.getImage(this.imageUrl),
+                      ),
+                    ),
+                    SizedBox(width: 50,),
+                    ElevatedButton(
+                      child: Text(
+                        "Browse"
+                      ),
+                      onPressed: () async {
+                        final XFile image = await _picker.pickImage(source: ImageSource.gallery);
+                        //var response = http.getImage("shivam");
+                        var stream = await http.uploadImage("api/uploadGroupImage", image.path);
+                        print(stream.statusCode);
+                        var response = await Response.fromStream(stream);
+                        print(response.body);
+                        setState(() {
+                          this.imageUrl = json.decode(response.body)['groupImage'];
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
               ListTile(
                 title: NeumorphicText(
                   "What is this group about???",
@@ -154,27 +203,6 @@ class _GroupCreationState extends State<GroupCreation> {
                             },
                             child: Tag(text: x))).toList(),
                       ),
-                      Container(
-                        padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
-                        width: double.infinity,
-                        child: TextFormField(
-                          controller: _tagsController,
-                          textAlign: TextAlign.left,
-                          decoration: InputDecoration(
-                              enabledBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                      color: Colors.blue
-                                  ),
-                                  borderRadius: BorderRadius.all(Radius.circular(20.0))
-                              ),
-                              contentPadding: EdgeInsets.fromLTRB(20, 0, 20, 0),
-                              hintText: 'Enter a Tag name'
-                          ),
-                          // onChanged: (text) {
-                          //   this.text = text;
-                          // },
-                        ),
-                      ),
                       Neumorphic(
                         style: NeumorphicStyle(
                             color: Colors.white,
@@ -182,16 +210,40 @@ class _GroupCreationState extends State<GroupCreation> {
                         ),
                         child: Center(
                           child: TextButton.icon(
-                            label: Text(
-                                "Add Tag"
-                            ),
                             icon: Icon(Icons.add),
-                            onPressed: () {
+                            onPressed: () async {
+                              dynamic data = await showGeneralDialog(
+                                  context: context,
+                                  barrierLabel: 'Label',
+                                  barrierColor: Colors.black.withOpacity(0.5),
+                                  barrierDismissible: true,
+                                  transitionDuration: Duration(milliseconds: 200),
+                                  transitionBuilder: (context, anim1, anim2, child) {
+                                    return SlideTransition(
+                                      position: Tween(begin: Offset(0,1), end: Offset(0,0)).animate(anim1),
+                                      child: child,
+                                    );
+                                  },
+                                  pageBuilder: (context, animation1, animation2) {
+                                    return SearchTags(
+                                      tags: this.tags,
+                                    );
+                                  }
+                              );
                               setState(() {
-                                tags.add(_tagsController.text);
+                                if (data != null && data != "") {
+                                  tags.add(
+                                      data);
+                                  //_controller.clear();
+                                }
                               });
-                              _tagsController.clear();
                             },
+                            label: Text(
+                              "Add Tag",
+                              style: TextStyle(
+                                  fontSize: 16
+                              ),
+                            ),
                           ),
                         ),
                       )
@@ -324,15 +376,23 @@ class _GroupCreationState extends State<GroupCreation> {
                         'tags': tags,
                         'Latitude': Latitude,
                         'Longitude': Longitude,
-                        'address' : address
+                        'address' : address,
+                        'isAnonymous': this.tick,
+                        "image": this.imageUrl
                       };
                       var response = await http.post('api/createGroup', data);
                       print(json.decode(response.body));
-                      _nameController.clear();
-                      tags.clear();
-                      selectedAddress = "";
-                      _tagsController.clear();
-                      _controller.clear();
+                      applicationBloc.updateUserData(json.decode(response.body)['user']);
+                      //setState(() {
+                        _nameController.clear();
+                        tags.clear();
+                        selectedAddress = "";
+                        _tagsController.clear();
+                        _controller.clear();
+                        imageUrl = "public/icon.png";
+                        this.tick = false;
+                      //});
+
                       final snackBar = SnackBar(
                         content: Text("Broadcast created, press OK to see your broadcasts"),
                         action: SnackBarAction(

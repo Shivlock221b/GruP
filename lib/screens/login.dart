@@ -6,6 +6,7 @@ import 'package:grup/networkHandler.dart';
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:grup/profile_page.dart';
+import 'package:grup/screens/forgotPassword.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geocoding/geocoding.dart';
@@ -182,7 +183,28 @@ class _LoginState extends State<Login> {
                     ),
                   ),
                 ),
-                SizedBox(height: 40,),
+                Row(
+
+                  mainAxisAlignment:MainAxisAlignment.start,
+                  children:[
+                    SizedBox(width:18),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        textStyle: TextStyle(
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(
+                          builder: (builder) => ForgotPassword()
+                        ));
+                      },
+                      child:Text("Forgot password",
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20,),
+                //SizedBox(height: 40,),
                 Center(
                   child: ElevatedButton(
                     onPressed: () async {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
+import 'package:grup/networkHandler.dart';
 import 'package:grup/screens/login.dart';
 import 'package:grup/screens/signup.dart';
 
@@ -11,6 +12,9 @@ class FrontPage extends StatefulWidget {
 }
 
 class _FrontPageState extends State<FrontPage> {
+  
+  NetworkHandler http = NetworkHandler();
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,7 +24,7 @@ class _FrontPageState extends State<FrontPage> {
           SizedBox(height: 150,),
           Center(
             child: CircleAvatar(
-              child: Image.asset('assets/icon.png'),
+              backgroundImage: http.getImage('public/icon.png'),
               radius: 130.0,
             ),
           ),

@@ -4,8 +4,9 @@ import 'package:grup/bloc/application_bloc.dart';
 import 'package:provider/provider.dart';
 
 class ChatCard extends StatelessWidget {
-  const ChatCard({Key key, this.chatName}) : super(key: key);
+  const ChatCard({Key key, this.chatName, this.count}) : super(key: key);
   final String chatName;
+  final count;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +40,7 @@ class ChatCard extends StatelessWidget {
               child: CircleAvatar(
                 radius: 10,
                 child: Text(
-                  applicationBloc.user['count'].toString()
+                  this.count.toString()
                 ),
               ),
             )

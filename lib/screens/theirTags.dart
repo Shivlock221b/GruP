@@ -88,7 +88,7 @@ class IconsData {
 
 class TheirTags extends StatefulWidget {
   const TheirTags({Key key, this.tags}) : super(key: key);
-  final Map<String, dynamic> tags;
+  final List<dynamic> tags;
   @override
   TheirTagsState createState() => TheirTagsState();
 }
@@ -144,7 +144,7 @@ class TheirTagsState extends State<TheirTags> {
 
   @override
   Widget build(BuildContext context) {
-    List<dynamic> _list = widget.tags.keys.toList();
+    List<dynamic> _list = widget.tags;
     return Scaffold(
       body: GridView.count(
           crossAxisCount: 2,
@@ -169,7 +169,7 @@ class TheirTagsState extends State<TheirTags> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(_list[index].toString(),
+                            Text(_list[index]['name'].toString(),
                                 //textAlign: TextAlign.left,
                                 softWrap: true,
                                 style: TextStyle(
@@ -198,7 +198,7 @@ class TheirTagsState extends State<TheirTags> {
                                   child: Row(
                                     children:[
                                       Text(
-                                        widget.tags[_list[index]].toString(),
+                                        _list[index]['count'].toString(),
                                         //textDirection: TextDirection.ltr,
                                         //textAlign: TextAlign.end,
                                         style: TextStyle(

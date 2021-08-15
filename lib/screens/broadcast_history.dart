@@ -253,7 +253,7 @@ class _BroadcastHistoryState extends State<BroadcastHistory> {
                                     });
                                   },
                                   child: BroadCast(
-                                      text1: "Expired At : $time",
+                                      text1: "Expiry time: $time",
                                       text2: this.savedBroadcasts[index]['content'],
                                   ),
                                 );
@@ -290,7 +290,7 @@ class _BroadcastHistoryState extends State<BroadcastHistory> {
                                     });
                                   },
                                   child: BroadCast(
-                                      text1: "Expired At : $eventTime",
+                                      text1: "Event Time : $eventTime",
                                       text2: this.savedEvents[index]['content']
                                   ),
                                 );

@@ -1,7 +1,11 @@
+
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:grup/db/datasource.dart';
 import 'package:grup/networkHandler.dart';
 import 'package:grup/profile_page.dart';
+import 'package:socket_io_client/socket_io_client.dart';
 
 class ApplicationBloc with ChangeNotifier {
 
@@ -78,8 +82,15 @@ class ApplicationBloc with ChangeNotifier {
   addId(dynamic data) {
     print("add Ids");
     print(data);
-    dynamic chat = user['chats'].firstWhere((elem) => elem['chatId'] == data['chatId'], oeElse: () => null);
-    chat['memebers'][data['userName']] = data['socketId'];
+    List<dynamic> chats = user['chats'];
+    for (int i = 0; i < chats.length; i++) {
+      if (chats[i]['chatId'] == data['chatId']) {
+        chats[i]['members'][data['name']] = data['socketId'];
+      }
+    }
+    //dynamic chat = user['chats'].firstWhere((elem) => elem['chatId'] == data['chatId'], oeElse: () => null);
+    //chat['members'][data['name']] = data['socketId'];
+    print("problem");
     notifyListeners();
   }
 
@@ -89,6 +100,7 @@ class ApplicationBloc with ChangeNotifier {
     print(user["chats"]);
     dynamic chat = user['chats'].firstWhere((elem) => elem['name'] == data['chatName'], orElse: () => null);
     chat['members'] = data['socketIds'];
+    print("problem");
     notifyListeners();
     print(chat);
   }
@@ -109,38 +121,28 @@ class ApplicationBloc with ChangeNotifier {
     notifyListeners();
   }
 
-  // setCounterNull(String chatId) {
-  //   dynamic chat = user['chats'].firstWhere((elem) => elem['chatId'] == chatId, orElse: () => null);
-  //   chat['count'] = 0;
-  //   notifyListeners();
-  // }
-  //
-  // setUserCounter(int count) {
-  //   if (user['count'] == null) {
-  //     user['count'] = 0;
-  //   } else {
-  //     user['count'] = user['count'] - count;
-  //   }
-  //
-  //   notifyListeners();
-  // }
+  updateUserData(Map<String, dynamic> data) {
+    user = data;
+    notifyListeners();
+  }
 
   decreaseCounters(String chatId) {
+    print("inside decrease counter");
     dynamic chat = user['chats'].firstWhere((elem) => elem['chatId'] == chatId, orElse: () => null);
-    user['count'] = user['count'] - chat['count'];
+    user['count'] = 0;
     chat['count'] = 0;
     notifyListeners();
     http.post('api/updateCounter', user);
   }
 
-  addTags(String tag) {
+  addTags(String tag) async {
     user['tags'].add(tag);
     print("************************************");
     print("************************************");
     print("************************************");
     print("************************************");
     print(user);
-    //http.post("api/addTags", )
+    await http.post("api/addTags", user);
     notifyListeners();
   }
 
@@ -167,6 +169,12 @@ class ApplicationBloc with ChangeNotifier {
     print(selectedLocation);
     notifyListeners();
   }
+
+  clearUnread(dynamic data) {
+    dynamic chat = user['chats'].firstWhere((elem) => elem['chatId'] == data['chatId'] );
+    chat['unread'].clear();
+    notifyListeners();
+  }
   // setUserLogout() {
   //
   // }
@@ -175,6 +183,42 @@ class ApplicationBloc with ChangeNotifier {
     print(url);
     user['profilepic'] = url;
     print(user['profilepic']);
+    notifyListeners();
+  }
+
+  addFriend(dynamic data) {
+    user['friends'].insert(0, data);
+    notifyListeners();
+  }
+
+  removeFriendAndBlock(dynamic data, Socket socket) {
+    user['friends'].remove(data);
+    user['blocked'].insert(0, data);
+    dynamic chat = user['chats'].firstWhere((elem) => elem['name'] == data);
+    Map<String, dynamic> map = {
+      "userName": user['userName'],
+      "chatId": chat['chatId']
+    };
+    socket.emit("leave", map);
+    user['chats'].remove(chat);
+    notifyListeners();
+  }
+
+  removeFriendAndChat(dynamic data, Socket socket) {
+    dynamic chat = user['chats'].firstWhere((elem) => elem['name'] == data);
+    user['chats'].remove(chat);
+    user['friends'].remove(data);
+    notifyListeners();
+  }
+
+  removeChat(dynamic data) {
+    dynamic chat = user['chats'].firstWhere((elem) => elem['name'] == data);
+    user['chats'].remove(chat);
+    notifyListeners();
+  }
+
+  removeBlocked(dynamic data) {
+    user['blocked'].remove(data);
     notifyListeners();
   }
 

@@ -170,9 +170,9 @@ class _CustomLocationState extends State<CustomLocation> {
                                   'Longitude': data['longitude'],
                                   'address': list[0]
                                 };
-                                var result = await hello.patch(
-                                    "api/updateLocation", sendData);
-                                print(json.decode(result.body));
+                                // var result = await hello.patch(
+                                //     "api/updateLocation", sendData);
+                                // print(json.decode(result.body));
                               }
                               dynamic locationTitle = searchResults[index]["structured_formatting"]["main_text"];
                               Map<String, dynamic> sendData = {

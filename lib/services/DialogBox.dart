@@ -1,11 +1,15 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:grup/Pages/IndividualChat.dart';
+import 'package:grup/Pages/individual_Chat.dart';
 import 'package:grup/bloc/application_bloc.dart';
+import 'package:grup/message.dart';
 import 'package:grup/networkHandler.dart';
 import 'package:grup/screens/viewProfile.dart';
 import 'package:http/http.dart';
+import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
@@ -34,9 +38,15 @@ class _DialogBoxState extends State<DialogBox> {
 
   NetworkHandler http = NetworkHandler();
   List<dynamic> tags = [];
+  bool isComment = false;
+  TextEditingController _message = TextEditingController();
+  ScrollController _scrollController = ScrollController();
+  List<dynamic> comments = [];
+  Logger logger = Logger();
 
   @override
   void initState() {
+    comments = widget.broadcast['comments'];
     tags = widget.broadcast['tags'];
     super.initState();
   }
@@ -64,7 +74,9 @@ class _DialogBoxState extends State<DialogBox> {
                     onTap: () async {
                       if (widget.isLocalBroadcasts || widget.isLocalEvents || widget.isRSVPDEvents) {
                         Map<String, dynamic> data = {
-                          'name': widget.broadcast['sender']['userName']
+                          'name': widget.broadcast['sender']['userName'],
+                          'id': widget.broadcast['sender']['userId'],
+                          'isAnonymous': widget.broadcast['isAnonymous']
                         };
                         Response response = await http.post(
                             'api/getOwner', data);
@@ -80,10 +92,10 @@ class _DialogBoxState extends State<DialogBox> {
                               return ViewProfile(user: map['user'][0],
                                 self: map['self'],
                                 tags: map['tagMap'],
-                                socket
-                                : widget.socket,
+                                socket: widget.socket,
                                 requests: map['request'],
-                                friends: map['friends'],);
+                                isAnonymous: widget.broadcast['isAnonymous']
+                              );
                             }
                         ));
                       }
@@ -124,13 +136,23 @@ class _DialogBoxState extends State<DialogBox> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       TextButton(
-                        onPressed: () {
-                          setState(() {
-
-                          });
+                        onPressed: () async {
+                          print(applicationBloc.user);
+                          if (!(widget.broadcast['endorse']['endorser'].contains(applicationBloc.user['userName']))) {
+                            Map<String, dynamic> data = {
+                              "id": widget.broadcast['_id']
+                            };
+                            Response response = await http.post(
+                                "api/eventEndorse", data);
+                            setState(() {
+                              widget.broadcast['endorse']['count'] =
+                                  widget.broadcast['endorse']['count'] + 1;
+                              widget.broadcast['endorse']['endorser'].insert(0, applicationBloc.user['userName']);
+                            });
+                          }
                         },
                         child: Text(
-                            "Endorse"
+                            "${widget.broadcast['endorse']['count']} Endorse"
                         ),
                       ),
                       TextButton(
@@ -195,14 +217,25 @@ class _DialogBoxState extends State<DialogBox> {
                               Map<String,dynamic> chatDetails = json.decode(response.body);
                               print("check creator");
                               print(chatDetails);
+                              logger.i(chatDetails['newChat']);
+                              logger.i(chatDetails['receiver']);
                               if (response.statusCode == 400) {
-                                final snackBar = SnackBar(
-                                  content: Text("Chat already exists"),
-                                );
-                                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                // final snackBar = SnackBar(
+                                //   content: Text("Chat already exists"),
+                                // );
+                                // ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                await Navigator.push(context, MaterialPageRoute(
+                                  builder: (builder) => IndividualChat(
+                                    socket: widget.socket,
+                                    data: applicationBloc.user,
+                                    chat: [],
+                                    chatId: chatDetails['chat']['chatId'],
+                                    chatName: chatDetails['chat']['name']
+                                  )
+                                ));
                               } else {
                                 applicationBloc.setUser(chatDetails['creator']);
-                                widget.socket.emit("/newChat", chatDetails['receiver']);
+                                widget.socket.emit("/newChat", chatDetails);
                                 print(applicationBloc.user);
                                 await Navigator.push(
                                     context,
@@ -262,22 +295,123 @@ class _DialogBoxState extends State<DialogBox> {
                           )
                       ),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          setState(() {
+                            isComment = !isComment;
+                          });
+                        },
                         child: Text(
                             "Comment"
                         ),
-                      )
+                      ),
                     ],
                   ),
-                  Container(
-                    height: 300,
-                    child: ListView.builder(
-                        itemCount: 1,
-                        itemBuilder: (context, index) {
-                          return Container();
-                        }
-                    ),
-                  )
+                  Stack(
+                    children: [
+                      Container(
+                        height: 150,
+                        child: ListView.builder(
+                            controller: _scrollController,
+                            itemCount: widget.broadcast['comments'].length,
+                            itemBuilder: (context, index) {
+                              return Card(
+                                color: Colors.yellow[300],
+                                elevation: 1,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                child: Padding(
+                                  padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+                                  child: Text(
+                                    widget.broadcast['comments'][index]['message'],
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.black
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
+                        ),
+                      ) ,
+                      isComment ? Row(
+                        children: [
+                          Neumorphic(
+                            margin: EdgeInsets.fromLTRB(10, 10, 0, 10),
+                            style: NeumorphicStyle(
+                                boxShape: NeumorphicBoxShape.roundRect(BorderRadius.all(Radius.circular(20))),
+                                color: Colors.white
+                            ),
+                            child: Container(
+                              color: Colors.white,
+                              width: MediaQuery.of(context).size.width - 90,
+                              child: Theme(
+                                data: Theme.of(context).copyWith(primaryColor: Colors.white),
+                                child: TextFormField(
+                                  controller: _message,
+                                  decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                            color: Colors.white
+                                        ),
+                                        borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                                      ),
+                                      contentPadding: EdgeInsets.symmetric(horizontal: 20.0),
+                                      hintText: "Comment"
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 10,),
+                          Container(
+                            margin: EdgeInsets.only(bottom: 0),
+                            child: Neumorphic(
+                              style: NeumorphicStyle(
+                                  boxShape: NeumorphicBoxShape.roundRect(BorderRadius.all(Radius.circular(20))),
+                                  color: Colors.white
+                              ),
+                              child: CircleAvatar(
+                                  backgroundColor: Colors.blue,
+                                  child: IconButton(
+                                    onPressed: () async {
+                                      if (_message.text.length > 0) {
+                                        //print(this.socketIds);
+                                        Map<String, dynamic> data =
+                                        //"socketId" : this.socketId,
+                                        {
+                                          "time": DateTime.now().toString(),
+                                          "sender": applicationBloc.user['userName'],
+                                          "message": _message.text,
+                                          "broadcastId" : widget.broadcast['_id']
+                                        };
+                                        Response response = await http.post("api/eventComment", data);
+                                        print(DateTime.now().toString());
+                                        _message.clear();
+                                        print(data);
+                                        //widget.socket.emit('/message', messageData);
+                                        _scrollController.animateTo(
+                                            _scrollController.position.maxScrollExtent,
+                                            duration: Duration(milliseconds: 300),
+                                            curve: Curves.easeOut
+                                        );
+                                        setState(() {
+                                          widget.broadcast['comments'].add(data);
+                                          isComment = false;
+                                        });
+                                      }
+
+                                    },
+                                    padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
+                                    icon: Icon(Icons.send_rounded, color: Colors.white,),
+                                  )
+                              ),
+                            ),
+                          )
+                        ],
+                      ) : Container(),
+                    ],
+                  ),
                 ],
               ),
             ),

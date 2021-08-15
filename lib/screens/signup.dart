@@ -4,6 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:grup/screens/otp.dart';
+import 'package:grup/services/searchTags.dart';
 import 'package:grup/tags.dart';
 import 'package:grup/networkHandler.dart';
 import 'package:location/location.dart' as loc;
@@ -30,6 +32,7 @@ class _SignUpState extends State<SignUp> {
   String emailError = "";
   String passwordError = "";
   bool showpass = true;
+  String tagError = "";
   TextEditingController controller = TextEditingController();
   loc.Location _location = loc.Location();
   bool _serviceEnabled;
@@ -89,6 +92,7 @@ class _SignUpState extends State<SignUp> {
                     margin: EdgeInsets.symmetric(horizontal: 20),
                     child: Neumorphic(
                       child: TextFormField(
+                        keyboardType: TextInputType.name,
                         controller: _name,
                         decoration: InputDecoration(
                           //errorText: validate ? null : error,
@@ -128,6 +132,13 @@ class _SignUpState extends State<SignUp> {
                     margin: EdgeInsets.symmetric(horizontal: 20),
                     child: Neumorphic(
                       child: TextFormField(
+                        onTap: () {
+                          setState(() {
+                            validate = true;
+                            error = "";
+                          });
+                        },
+                        keyboardType: TextInputType.name,
                         controller: _userName,
                         decoration: InputDecoration(
                           errorText: validate ? null : error,
@@ -170,6 +181,12 @@ class _SignUpState extends State<SignUp> {
                               //backgroundColor: Colors.grey[100]
                             ),
                           ),
+                          subtitle: Text(
+                            "Must be a valid email address. Only one account is allowed per email address",
+                            style: TextStyle(
+                              fontSize: 12
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -178,6 +195,7 @@ class _SignUpState extends State<SignUp> {
                     margin: EdgeInsets.symmetric(horizontal: 20),
                     child: Neumorphic(
                       child: TextFormField(
+                        keyboardType: TextInputType.emailAddress,
                         controller: _email,
                         validator: (value) {
                           if (!value.contains('@')) {
@@ -208,42 +226,12 @@ class _SignUpState extends State<SignUp> {
                           contentPadding: EdgeInsets.symmetric(horizontal: 20.0),
                           hintText: "your email address",
                         ),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                    margin: EdgeInsets.all(8.0),
-                    child: Neumorphic(
-                      child: Center(
-                        child: ListTile(
-                          title: Text(
-                            "Phone Number",
-                            style: TextStyle(
-                              fontSize: 20,
-                              //fontFamily: 'Lobster',
-                              color: Colors.blue[900],
-                              //backgroundColor: Colors.grey[100]
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    margin: EdgeInsets.symmetric(horizontal: 20),
-                    child: Neumorphic(
-                      child: TextFormField(
-                        decoration: InputDecoration(
-                          enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(12.0)),
-                              borderSide: BorderSide(
-                                  color: Colors.blue
-                              )
-                          ),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 20.0),
-                          hintText: "Your Phone Number",
-                        ),
+                        onTap: () {
+                          setState(() {
+                            validate = true;
+                            error = "";
+                          });
+                        },
                       ),
                     ),
                   ),
@@ -262,6 +250,12 @@ class _SignUpState extends State<SignUp> {
                               //backgroundColor: Colors.grey[100]
                             ),
                           ),
+                          subtitle: Text(
+                            "Password must contain at least on number and one special character and must be greater than 8 in length",
+                            style: TextStyle(
+                              fontSize: 12
+                            )
+                          ),
                         ),
                       ),
                     ),
@@ -270,6 +264,13 @@ class _SignUpState extends State<SignUp> {
                     margin: EdgeInsets.symmetric(horizontal: 20),
                     child: Neumorphic(
                       child: TextFormField(
+                        onTap: () {
+                          setState(() {
+                            validate = true;
+                            passwordError = "";
+                          });
+                        },
+                        keyboardType: TextInputType.visiblePassword,
                         validator: (value) {
                           if (value.length < 8) return "password has to greater than 8";
                           if (!(value.contains('!') || value.contains('@') || value.contains('#') ||
@@ -342,6 +343,13 @@ class _SignUpState extends State<SignUp> {
                     margin: EdgeInsets.symmetric(horizontal: 20),
                     child: Neumorphic(
                       child: TextFormField(
+                        onTap: () {
+                          setState(() {
+                            validate = true;
+                            passwordError = "";
+                          });
+                        },
+                        keyboardType: TextInputType.visiblePassword,
                         controller: _confirmPasswordController,
                         validator: (value) {
                           // if (_password.text == value) {
@@ -388,189 +396,234 @@ class _SignUpState extends State<SignUp> {
                     ),
                   ),
                   SizedBox(height: 20,),
-                  Card(
-                    margin: EdgeInsets.symmetric(horizontal: 20),
-                    //margin: EdgeInsets.all(0.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        ListTile(
-                          title: Text(
-                            "TAGS",
-                            style: TextStyle(
-                              fontSize: 20,
-                              //fontFamily: 'Lobster',
-                              color: Colors.blue[900],
-                              //backgroundColor: Colors.grey[100]
+                  Neumorphic(
+                    style: NeumorphicStyle(
+                        shadowDarkColor: Colors.black
+                    ),
+                    child: Card(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          ListTile(
+                            subtitle: Text(
+                              "Optional: Search for tags from existing list",
+                              style: TextStyle(
+                                fontSize: 12
+                              )
                             ),
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Wrap(
-                            crossAxisAlignment: WrapCrossAlignment.start,
-                            children: tags.map((x) => Tag(text: x)).toList()
-                        ),
-                        Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: <Widget>[
-                              Expanded(
-                                flex: 8,
-                                child: Container(
-                                  margin: EdgeInsets.all(2),
-                                  padding: EdgeInsets.all(8.0),
-                                  width: 50,
-                                  child: Neumorphic(
-                                    child: TextFormField(
-                                      controller: controller,
-                                      decoration: InputDecoration(
-                                          enabledBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                  color: Colors.blue
-                                              ),
-                                              borderRadius: BorderRadius.all(Radius.circular(10.0))
-                                          ),
-                                          contentPadding: EdgeInsets.fromLTRB(20.0, 0 , 20.0 ,0),
-                                          hintText: 'Enter a Tag name'
-                                      ),
-                                      onChanged: (text) {
-                                        this.text = text;
-                                      },
-                                    ),
-                                  ),
+                              title: Text(
+                                "Tags",
+                                style: TextStyle(
+                                    fontFamily: 'ArchitectsDaughter-Regular.ttf',
+                                    fontSize: 28
                                 ),
                               ),
-                              TextButton.icon(
-                                icon: Icon(Icons.add),
-                                onPressed: () {
+                          ),
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.start,
+                            children: tags.map((x) => InkWell(
+                                onTap: () {
                                   setState(() {
-                                    tags.add(this.text);
+                                    tags.remove(x);
                                   });
-                                  controller.clear();
+                                },
+                                child: Tag(text: x))).toList(),
+                          ),
+                          Neumorphic(
+                            style: NeumorphicStyle(
+                                color: Colors.white,
+                                shadowDarkColor: Colors.blue
+                            ),
+                            child: Center(
+                              child: TextButton.icon(
+                                icon: Icon(Icons.add),
+                                onPressed: () async {
+                                  dynamic data = await showGeneralDialog(
+                                      context: context,
+                                      barrierLabel: 'Label',
+                                      barrierColor: Colors.black.withOpacity(0.5),
+                                      barrierDismissible: true,
+                                      transitionDuration: Duration(milliseconds: 200),
+                                      transitionBuilder: (context, anim1, anim2, child) {
+                                        return SlideTransition(
+                                          position: Tween(begin: Offset(0,1), end: Offset(0,0)).animate(anim1),
+                                          child: child,
+                                        );
+                                      },
+                                      pageBuilder: (context, animation1, animation2) {
+                                        return SearchTags(
+                                          tags: this.tags,createTag: true,
+                                        );
+                                      }
+                                  );
+                                  if (data != null && data != "" ) {
+                                    setState(() {
+                                      validate = true;
+                                      tagError = "";
+                                      tags.add(
+                                          data);
+                                      //_controller.clear();
+                                    });
+                                  }
                                 },
                                 label: Text(
                                   "Add Tag",
+                                  style: TextStyle(
+                                      fontSize: 16
+                                  ),
                                 ),
                               ),
-                              SizedBox(width: 80)
-                            ]
-                        )
-                      ],
+                            ),
+                          )
+                        ],
+                      ),
                     ),
                   ),
-                  // ElevatedButton(
-                  //     onPressed: () async {
-                  //       _serviceEnabled = await _location.serviceEnabled();
-                  //       if (!_serviceEnabled) {
-                  //         _serviceEnabled = await _location.requestService();
-                  //         if (!_serviceEnabled) {
-                  //           return;
-                  //         }
-                  //       }
-                  //       _permissionGranted = await _location.hasPermission();
-                  //       if (_permissionGranted == loc.PermissionStatus.denied) {
-                  //         _permissionGranted = await _location.requestPermission();
-                  //         if (_permissionGranted != loc.PermissionStatus.granted) {
-                  //           return;
-                  //         }
-                  //       }
-                  //       _locationData = await _location.getLocation();
-                  //       print(_locationData);
-                  //       List<Placemark> list = await placemarkFromCoordinates(_locationData.latitude, _locationData.longitude);
-                  //       print(list[0]);
-                  //     },
-                  //     child: Text(
-                  //       "Get Location"
-                  //     )
-                  // ),
                   Center(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        String value = _password.text;
-                        if (value.length < 8) {
-                          setState(() {
-                            validate = false;
-                            passwordError = "password must be greater than 8";
-                          });
-                        }
-                         else if (!(value.contains('!') || value.contains('@') ||
-                            value.contains('#') ||
-                            value.contains('%') || value.contains('^') ||
-                            value.contains('&') || value.contains('*'))) {
-                          setState(() {
-                            validate = false;
-                            passwordError =
-                            "password must contain special characters";
-                          });
-                        }
-                        else if (!(value.contains("0") || value.contains("1") ||
-                            value.contains('2') || value.contains('3') ||
-                            value.contains('4') || value.contains('5') ||
-                            value.contains('6') || value.contains('7') ||
-                            value.contains('8') || value.contains('9'))) {
-                          setState(() {
-                            validate = false;
-                            passwordError = "password must contain number";
-                          });
-                        }
+                    child: Column(
+                      children: [
+                        SizedBox(height: 20,),
+                        !validate ? Text(
+                          error  != "" ?  error : emailError != ""?  emailError :  passwordError != "" ? passwordError : tagError != "" ? tagError : "",
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.red
+                          ),
+                        ) : Container(),
+                        ElevatedButton(
+                          onPressed: () async {
+                            String value = _password.text;
+                            if (value.length < 8) {
+                              setState(() {
+                                validate = false;
+                                passwordError = "password must be greater than 8";
+                              });
+                            }
+                             else if (!(value.contains('!') || value.contains('@') ||
+                                value.contains('#') ||
+                                value.contains('%') || value.contains('^') ||
+                                value.contains('&') || value.contains('*'))) {
+                              setState(() {
+                                validate = false;
+                                passwordError =
+                                "password must contain special characters";
+                              });
+                            }
+                            else if (!(value.contains("0") || value.contains("1") ||
+                                value.contains('2') || value.contains('3') ||
+                                value.contains('4') || value.contains('5') ||
+                                value.contains('6') || value.contains('7') ||
+                                value.contains('8') || value.contains('9'))) {
+                              setState(() {
+                                validate = false;
+                                passwordError = "password must contain number";
+                              });
+                            } else if (!(value.contains("A") || value.contains("B") ||value.contains("C") ||value.contains("D")
+                                ||value.contains("E") ||value.contains("F") ||value.contains("I") ||value.contains("J")
+                                ||value.contains("K") ||value.contains("L") ||value.contains("M") ||value.contains("N")
+                                ||value.contains("O") ||value.contains("P") ||value.contains("Q") ||value.contains("R")
+                                ||value.contains("S") ||value.contains("T") ||value.contains("U") ||value.contains("V")
+                                ||value.contains("W") ||value.contains("X") ||value.contains("Y") ||value.contains("Z")
+                                ||value.contains("G") ||value.contains("H"))) {
+                              setState(() {
+                                validate = false;
+                                passwordError = "password must contain at least one upper case letter";
+                              });
+                            } else if (!(value.contains("a") || value.contains("b") ||value.contains("c") ||value.contains("d")
+                                ||value.contains("e") ||value.contains("f") ||value.contains("i") ||value.contains("j")
+                                ||value.contains("k") ||value.contains("l") ||value.contains("m") ||value.contains("n")
+                                ||value.contains("o") ||value.contains("p") ||value.contains("q") ||value.contains("r")
+                                ||value.contains("s") ||value.contains("t") ||value.contains("u") ||value.contains("v")
+                                ||value.contains("w") ||value.contains("x") ||value.contains("y") ||value.contains("z")
+                                ||value.contains("g") ||value.contains("h"))) {
+                              setState(() {
+                                validate = false;
+                                passwordError = "password must contain at least one lower case letter";
+                              });
+                            }
 
-                        value = _email.text;
-                        if (!value.contains("@")) {
-                          setState(() {
-                            validate = false;
-                            emailError = "invalid email, must have @";
-                          });
-                        }
+                            value = _email.text;
+                            if (!value.contains("@")) {
+                              setState(() {
+                                validate = false;
+                                emailError = "invalid email, must have @";
+                              });
+                            }
 
-                        if (!(_password.text == _confirmPasswordController.text)) {
-                          setState(() {
-                            validate = false;
-                            passwordError = "confirm password must match the password";
-                          });
-                        }
+                            if (!(_password.text == _confirmPasswordController.text)) {
+                              setState(() {
+                                validate = false;
+                                passwordError = "confirm password must match the password";
+                              });
+                            }
 
-
-                        print(tags.toString());
-                        Map<String, dynamic> data = {
-                          'name': _name.text,
-                          'userName': _userName.text,
-                          'email': _email.text,
-                          'password': _password.text,
-                          'tags': tags
-                        };
-                        print(data);
-                        if (validate == true) {
-                          var response = await http.post(
-                              'api/user/signup', data);
-                          if (response.statusCode == 201 ||
-                              response.statusCode == 200) {
-                            Map<String, dynamic> details = json.decode(
-                                response.body);
-                            final snackBar = SnackBar(
-                              content: Text(
-                                  "Account created, press OK to login"),
-                              action: SnackBarAction(
-                                label: "OK",
-                                onPressed: () {
-                                  Navigator.pushReplacementNamed(
-                                      context, '/login');
-                                },
-                              ),
-                            );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                snackBar);
-                          } else {
-                            Map<String, dynamic> details = json.decode(
-                                response.body);
-                            setState(() {
-                              validate = false;
-                              error = details["message"];
-                            });
-                          }
-                        }
-                      },
-                      child: Text(
-                          "Submit"
-                      ),
+                            print(tags.toString());
+                            Map<String, dynamic> data = {
+                              'name': _name.text,
+                              'userName': _userName.text,
+                              'email': _email.text,
+                              'password': _password.text,
+                              'tags': tags
+                            };
+                            print(data);
+                            if (validate == true) {
+                              var response = await http.post(
+                                  'api/user/activateAccount', data);
+                                Map<String, dynamic> details = json.decode(
+                                    response.body);
+                                bool verify = await Navigator.push(context, MaterialPageRoute(
+                                    builder: (builder) => Otp(
+                                      otp: details['oneTimePass'].toString(),
+                                    )
+                                ));
+                                if (verify) {
+                                var res = await http.post(
+                                    'api/user/signup', data);
+                              if (res.statusCode == 201 ||
+                                  res.statusCode == 200) {
+                                final snackBar = SnackBar(
+                                  content: Text(
+                                      "Account created click 'OK' to login"),
+                                  action: SnackBarAction(
+                                    label: "OK",
+                                    onPressed: () {
+                                      Navigator.pushReplacementNamed(
+                                          context, '/login');
+                                    },
+                                  ),
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    snackBar);
+                              } else if (res.statusCode == 400){
+                                Map<String, dynamic> details = json.decode(
+                                    res.body);
+                                setState(() {
+                                  validate = false;
+                                  emailError = details["message"];
+                                  error = "";
+                                });
+                              } else if (res.statusCode == 401) {
+                                Map<String, dynamic> details = json.decode(
+                                    res.body);
+                                setState(() {
+                                  validate = false;
+                                  error = details["message"];
+                                  emailError = "";
+                                });
+                              }
+                            } else {
+                                  setState(() {
+                                    error = "Wrong OTP try again";
+                                  });
+                                }
+                            }
+                          },
+                          child: Text(
+                              "Submit",
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

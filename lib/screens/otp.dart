@@ -3,11 +3,15 @@ import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:grup/networkHandler.dart';
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:grup/screens/resetPassword.dart';
+import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 
 class Otp extends StatefulWidget {
-  const Otp({Key key}) : super(key: key);
+  const Otp({Key key, this.otp, this.email}) : super(key: key);
+  final String otp;
+  final String email;
 
   @override
   _OtpState createState() => _OtpState();
@@ -15,6 +19,11 @@ class Otp extends StatefulWidget {
 }
 
 class _OtpState extends State<Otp> {
+
+  NetworkHandler http = NetworkHandler();
+  TextEditingController _controller = TextEditingController();
+  String error = "";
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,10 +72,12 @@ class _OtpState extends State<Otp> {
                   ),
                   Container(
                     child: TextFormField(
+                      controller: _controller,
                       textAlign:TextAlign.center,
                       maxLength: 6,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
+                        errorText: error,
                         errorBorder: OutlineInputBorder(
                           borderSide: BorderSide(
                             width: 0.0,
@@ -88,21 +99,81 @@ class _OtpState extends State<Otp> {
               ),
             ),
             SizedBox(height:30),
-            ElevatedButton(
-              style:ElevatedButton.styleFrom(
-                primary : Colors.yellow[300],
-                shape: RoundedRectangleBorder(borderRadius:BorderRadius.circular(20)),
-                padding : EdgeInsets.symmetric(horizontal : 50),
-              ),
-              onPressed: (){},
-              child : Text(
-                "Submit",
-                style : TextStyle(
-                    fontSize : 16.0,
-                    letterSpacing: 2.0,
-                    color:Colors.black
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                ElevatedButton(
+                  style:ElevatedButton.styleFrom(
+                    primary : Colors.yellow[300],
+                    shape: RoundedRectangleBorder(borderRadius:BorderRadius.circular(20)),
+                    padding : EdgeInsets.symmetric(horizontal : 50),
+                  ),
+                  onPressed: () async {
+                    if (widget.otp == null || widget.otp == "") {
+                      Map<String, dynamic> data = {
+                        "email": widget.email,
+                        "otp": _controller.text
+                      };
+                      Response response = await http.post(
+                          'api/user/checkOTP', data);
+                      if (response.statusCode == 200 || response.statusCode == 201) {
+                        Navigator.push(context, MaterialPageRoute(
+                            builder: (builder) => ResetPassword(
+                              email: widget.email,
+                            )
+                        ));
+                      } else {
+                        setState(() {
+                          error = "Wrong OTP";
+                        });
+                      }
+                    } else {
+                      if (widget.otp == _controller.text) {
+                        Navigator.pop(context, true);
+                      } else {
+                        setState(() {
+                          error = "Wrong OTP";
+                        });
+                      }
+                    }
+                  },
+                  child : Text(
+                    "Submit",
+                    style : TextStyle(
+                        fontSize : 16.0,
+                        letterSpacing: 2.0,
+                        color:Colors.black
+                    ),
+                  ),
                 ),
-              ),
+                SizedBox(width: 30,),
+                TextButton(
+                    onPressed: () async {
+                      Map<String, dynamic> data = {
+                        "email": widget.email
+                      };
+                      Response response = await http.post("api/user/forgotPassword", data);
+                      if (response.statusCode == 200 || response.statusCode == 201) {
+                        final snackBar = SnackBar(
+                          content: Text(
+                              "New OTP sent"),
+                          action: SnackBarAction(
+                            label: "OK",
+                            onPressed: () {
+                              Navigator.pushReplacementNamed(
+                                  context, '/login');
+                            },
+                          ),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            snackBar);
+                      }
+                    },
+                    child: Text(
+                      "Resend OTP"
+                    )
+                )
+              ],
             ),
           ],
         ),

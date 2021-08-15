@@ -7,6 +7,7 @@ import 'package:flutter/rendering.dart';
 import 'package:grup/bloc/application_bloc.dart';
 import 'package:grup/networkHandler.dart';
 import 'package:grup/screens/RSVPEvents.dart';
+import 'package:grup/screens/blocked.dart';
 import 'package:grup/screens/broadcast_history.dart';
 import 'package:grup/screens/friends.dart';
 import 'package:grup/screens/newtagsscreen.dart';
@@ -122,16 +123,12 @@ class _NavDrawerState extends State<NavDrawer> {
               ),
               child: InkWell(
                 onTap: () async {
-                  Map<String, dynamic> data = {
-                    "name": widget.data['userName'],
-                    "profilepic" : widget.data['profilepic']
-                  };
-                  Response response = await http.post("api/getFriends", data);
-                  print(response.statusCode);
-                  print(response.body);
+                  // Response response = await http.get("api/getFriends");
+                  // print(response.statusCode);
+                  // print(response.body);
                   Navigator.push(context, MaterialPageRoute(
                       builder: (builder) => Friends(
-                        friends: json.decode(response.body)['friends'],
+                        friends: applicationBloc.user['friends'],
                         userName: widget.data['userName'],
                         socket: widget.socket
                       )
@@ -161,8 +158,7 @@ class _NavDrawerState extends State<NavDrawer> {
               ),
               child: InkWell(
                 onTap: () async {
-                  Map<String, dynamic> data = {};
-                  Response response = await http.post("api/getRequests", data);
+                  Response response = await http.get("api/getRequests");
                   print(response.statusCode);
                   Map<String, dynamic> map = json.decode(response.body);
                   List<dynamic> requests = map['requests'];
@@ -242,6 +238,41 @@ class _NavDrawerState extends State<NavDrawer> {
               ),
             ),
             Container(
+              //margin: EdgeInsets.all(2.0),
+              padding: EdgeInsets.fromLTRB(0.0, 1.0, 0.0, 0.0),
+              decoration: BoxDecoration(
+                  border: Border(
+                    //top: BorderSide.merge(new BorderSide(), new BorderSide()),
+                    bottom: BorderSide.merge(new BorderSide(), new BorderSide()),
+                  )
+              ),
+              child: InkWell(
+                onTap: () async {
+                  // Response response = await http.get("api/getFriends");
+                  // print(response.statusCode);
+                  // print(response.body);
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (builder) => Blocked(
+                          friends: applicationBloc.user['blocked'],
+                          userName: widget.data['userName'],
+                          socket: widget.socket
+                      )
+                  )
+                  );
+                },
+                child: ListTile(
+                  title: Text(
+                    'Blocked Users',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.blue[900],
+                      //fontFamily: 'Lobster'
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Container(
       //margin: EdgeInsets.all(2.0),
               padding: EdgeInsets.fromLTRB(0.0, 1.0, 0.0, 0.0),
       decoration: BoxDecoration(
@@ -280,16 +311,13 @@ class _NavDrawerState extends State<NavDrawer> {
                   // SharedPreferences prefs = await SharedPreferences.getInstance();
                   // prefs.clear();
                   List<dynamic> chats = applicationBloc.user == null? widget.data['chats'] : applicationBloc.user['chats'];
-                  for (int i = 0; i < chats.length; i++) {
-                    chats[i]['members'].forEach((k, v) {
-                      Map<String, dynamic> logoutData = {
-                        "chatInfo" : chats[i],
-                        "socketId" : v,
-                        "userName" : widget.data['userName']
-                      };
-                      widget.socket.emit("/logOut", logoutData);
-                    });
-                  }
+                  chats.forEach((element) {
+                    Map<String, dynamic> logoutData = {
+                      "chatId": element['chatId'],
+                      "userName": widget.data['userName']
+                    };
+                    widget.socket.emit("/logOut", logoutData);
+                  });
                   //applicationBloc.setUserLogout();
                   widget.socket.disconnect();
                   var response = await http.post('api/logout', applicationBloc.user ?? widget.data);

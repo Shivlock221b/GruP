@@ -105,7 +105,7 @@ class _SearchByNameState extends State<SearchByName> {
                       print(map['tagMap']);
                       Navigator.push(context, MaterialPageRoute(
                           builder: (builder) {
-                            return ViewProfile(user: map['user'][0], self: map['self'], tags: map['tagMap'], socket: widget.socket, requests: map['request'], friends: map['friends'],);
+                            return ViewProfile(user: map['user'][0], self: map['self'], tags: map['tagMap'], socket: widget.socket, requests: map['request']);
                           }
                       ));
                     },

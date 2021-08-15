@@ -9,10 +9,10 @@ import 'package:logger/logger.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
 class Requests extends StatefulWidget {
-  const Requests({Key key, this.requests, this.sent, this.socket}) : super(key: key);
-  final List<dynamic> requests;
-  final List<dynamic> sent;
-  final Socket socket;
+  Requests({Key key, this.requests, this.sent, this.socket}) : super(key: key);
+  List<dynamic> requests;
+  List<dynamic> sent;
+  Socket socket;
 
   @override
   _RequestsState createState() => _RequestsState(requests: requests, sent: sent);
@@ -25,6 +25,16 @@ class _RequestsState extends State<Requests> {
   _RequestsState({this.requests, this.sent});
   NetworkHandler http = NetworkHandler();
   Logger logger = Logger();
+
+  @override
+  void initState() {
+    widget.socket.on("requestDeleted", (data) {
+      setState(() {
+        this.sent.removeWhere((elem) => elem['receiver']['name'] == data['user']);
+      });
+    });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +87,7 @@ class _RequestsState extends State<Requests> {
                       map = json.decode(response.body);
                       Navigator.push(context, MaterialPageRoute(
                           builder: (builder) {
-                            return ViewProfile(user: map['user'][0], self: map['self'], tags: map['tagMap'], socket: widget.socket, requests: map['request'], friends: map['friends'],);
+                            return ViewProfile(user: map['user'][0], self: map['self'], tags: map['tagMap'], socket: widget.socket, requests: map['request']);
                           }
                       ));
                     },
@@ -121,7 +131,7 @@ class _RequestsState extends State<Requests> {
                       logger.i(map['friends']);
                       Navigator.push(context, MaterialPageRoute(
                           builder: (builder) {
-                            return ViewProfile(user: map['user'][0], self: map['self'], tags: map['tagMap'], socket: widget.socket, requests: map['request'], friends: map['friends'],);
+                            return ViewProfile(user: map['user'][0], self: map['self'], tags: map['tagMap'], socket: widget.socket, requests: map['request']);
                           }
                       ));
                     },

@@ -3,6 +3,8 @@ import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:grup/networkHandler.dart';
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:grup/screens/otp.dart';
+import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 
@@ -15,6 +17,10 @@ class ForgotPassword extends StatefulWidget {
 }
 
 class _ForgotPasswordState extends State<ForgotPassword> {
+
+  TextEditingController _controller = TextEditingController();
+  NetworkHandler http = NetworkHandler();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,6 +61,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                   ),
                   TextFormField(
                     keyboardType: TextInputType.emailAddress,
+                    controller: _controller,
                     decoration: InputDecoration(
                       errorBorder: OutlineInputBorder(
                         borderSide: BorderSide(
@@ -83,7 +90,19 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                 shape: RoundedRectangleBorder(borderRadius:BorderRadius.circular(20)),
                 padding : EdgeInsets.symmetric(horizontal : 50),
               ),
-              onPressed: (){},
+              onPressed: () async {
+                Map<String, dynamic> data = {
+                  "email" : _controller.text
+                };
+                Response response = await http.post("api/user/forgotPassword", data);
+                if (response.statusCode == 200 || response.statusCode == 201) {
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (builder) => Otp(
+                        email: _controller.text,
+                      )
+                  ));
+                }
+              },
               child : Text(
                 "Submit",
                 style : TextStyle(

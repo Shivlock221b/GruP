@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:grup/bloc/application_bloc.dart';
 import 'package:grup/networkHandler.dart';
 import 'package:grup/services/search_by_name.dart';
 import 'package:grup/services/search_by_tags.dart';
+import 'package:provider/provider.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
 class Explore extends StatefulWidget {
@@ -41,6 +43,9 @@ class _ExploreState extends State<Explore> {
 
   @override
   Widget build(BuildContext context) {
+
+    var applicationBloc = Provider.of<ApplicationBloc>(context);
+
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).requestFocus(new FocusNode());
@@ -88,9 +93,17 @@ class _ExploreState extends State<Explore> {
                   crossAxisCount: 2,
                   childAspectRatio: (1 / .4),
                   children: List.generate(tags.length, (index) {
-                    return Padding(
-                      padding: const EdgeInsets.all(3.0),
+                    return InkWell(
+                      onTap: () {
+                        Map<String, dynamic> user = applicationBloc.user;
+                        print(applicationBloc.user);
+                        if (!(user['tags'].contains(tags[index]['name']))) {
+                          user['tags'].add(tags[index]['name']);
+                          applicationBloc.setUser(user);
+                        }
+                      },
                       child: Container(
+                        padding: const EdgeInsets.all(3.0),
                         height: 20,
                         // width:20,
                         child: Card(

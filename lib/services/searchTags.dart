@@ -12,7 +12,7 @@ import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 
 class SearchTags extends StatefulWidget {
-  SearchTags({Key key, this.tags, this.createTag = false}) : super(key: key);
+  SearchTags({Key key, this.tags, this.createTag = false,}) : super(key: key);
   final List<dynamic> tags;
   bool createTag;
 
@@ -58,7 +58,7 @@ class _SearchTagsState extends State<SearchTags> {
         child: Align(
           alignment: Alignment.bottomCenter,
           child: Container(
-            height: 500,
+            height: 400,
             margin: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 20, left: 12, right: 12),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -114,7 +114,7 @@ class _SearchTagsState extends State<SearchTags> {
                     },
                   ),
                   Container(
-                    height: createTag? 420 : 370,
+                    height: createTag? 320 : 270,
                     child: ListView.builder(
                         controller: _scrollController,
                         itemCount: searchResults.length,

@@ -3,11 +3,15 @@ import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
+import 'package:grup/Pages/chat.dart';
 import 'package:grup/bloc/application_bloc.dart';
-import 'package:grup/screens/chats.dart';
+import 'package:grup/db/datasource.dart';
+import 'package:grup/models/local_message.dart';
+// import 'package:grup/screens/chats.dart';
 import 'package:grup/screens/friendBroadcasts.dart';
 import 'package:grup/screens/trending.dart';
 import 'package:grup/services/customLocation.dart';
+import 'package:grup/services/encryption_service.dart';
 import 'package:grup/services/searchTags.dart';
 import 'package:grup/tags.dart';
 import 'dart:io';
@@ -55,6 +59,7 @@ class _ProfilePageState extends State<ProfilePage>  with WidgetsBindingObserver 
   int calls = 0;
   String selectedAddress = '';
   Timer timeHandle;
+  DataSource _dataSource;
   List<String> suggestedTags = [];
   //String baseUrl = '10.120.8.146:3000';
   NetworkHandler hello = NetworkHandler();
@@ -71,7 +76,13 @@ class _ProfilePageState extends State<ProfilePage>  with WidgetsBindingObserver 
   //       //.disableAutoConnect()
   //       .build(),
   // );
-  IO.Socket socket = IO.io(Uri.http('172.31.75.147:3000', "").toString(),
+  // IO.Socket socket = IO.io(Uri.http('172.31.75.147:3000', "").toString(),
+  //   OptionBuilder()
+  //       .setTransports(['websocket'],)
+  //   //.disableAutoConnect()
+  //       .build(),
+  // );
+  IO.Socket socket = IO.io(Uri.http('172.31.75.128:3000', "").toString(),
     OptionBuilder()
         .setTransports(['websocket'],)
     //.disableAutoConnect()
@@ -82,9 +93,18 @@ class _ProfilePageState extends State<ProfilePage>  with WidgetsBindingObserver 
 
   @override
   void initState() {
+    _dataSource = hello.dataSource;
     socket.connect();
+    print("connecttttttttttttttttttt");
+    print(widget.user['_id']);
     socket.emit("signin", widget.user['_id']);
-    socket.on('receive', (data) {
+    socket.on('messageSave', (data) async {
+        print("inside receive in profile page");
+        data['message'] = EncryptionService.decryptAES(data['message']);
+        LocalMessage message = LocalMessage(
+            data['chatId'], data['sender'], data['message'], data['time'],
+            this.data['userName']);
+        await _dataSource.addMessage(message);
       var applicationBloc = Provider.of<ApplicationBloc>(context, listen: false);
       print(data);
       print("inside receive");
@@ -93,16 +113,19 @@ class _ProfilePageState extends State<ProfilePage>  with WidgetsBindingObserver 
       //}
     });
 
-    socket.on('replyOnline', (data) {
-      var applicationBloc = Provider.of<ApplicationBloc>(context, listen: false);
-      print("inside replyOnline in profile page");
-      applicationBloc.setId(data);
+    socket.on("online", (data) {
+      print("online inside individual" + data['userName']);
+      Map<String, dynamic> senderData = {
+        "chatId": data['chatId'],
+        "userName": this.data['userName']
+      };
+      socket.emit("/replyOnline", senderData);
     });
 
     socket.on("logOut", (data) {
       var applicationBloc = Provider.of<ApplicationBloc>(context, listen: false);
       print("inside logout");
-      applicationBloc.setNull(data);
+     // applicationBloc.setNull(data);
     });
 
     socket.on("needCounter", (data) {
@@ -114,7 +137,8 @@ class _ProfilePageState extends State<ProfilePage>  with WidgetsBindingObserver 
 
     socket.on("newChat", (data) {
       var applicationBloc = Provider.of<ApplicationBloc>(context, listen: false);
-      applicationBloc.setUser(data);
+      socket.emit("join", data['newChat']['_id']);
+      applicationBloc.setUser(data['receiver']);
     });
 
     socket.on("newMember", (data) {
@@ -124,15 +148,22 @@ class _ProfilePageState extends State<ProfilePage>  with WidgetsBindingObserver 
 
     socket.on("signed in", (data) {
       var applicationBloc = Provider.of<ApplicationBloc>(context, listen: false);
-      applicationBloc.setUser(data);
+      applicationBloc.updateUserData(data);
     });
 
-    socket.on("friendRequest", (_) {
-
+    socket.on("/leave", (data) {
+      var applicationBloc = Provider.of<ApplicationBloc>(context, listen: false);
+      applicationBloc.removeFriendAndChat(data, socket);
     });
 
-    socket.on("requestAccepted", (_) {
+    socket.on("requestAccepted", (data) {
+      var applicationBloc = Provider.of<ApplicationBloc>(context, listen: false);
+      applicationBloc.addFriend(data);
+    });
 
+    socket.on("friendAdded", (data) {
+      var applicationBloc = Provider.of<ApplicationBloc>(context, listen: false);
+      applicationBloc.addFriend(data);
     });
 
     print("Shivvvvvvvvv");
@@ -198,14 +229,14 @@ class _ProfilePageState extends State<ProfilePage>  with WidgetsBindingObserver 
     }
     //socket.connect();
     //socket.emit('signin', data['_id']);
-    socket.on('online', (data) {
-      print("inside online in profile page");
-      if (applicationBLoc.user == null) {
-        applicationBLoc.setUser(this.data);
-      }
-      applicationBLoc.setId(data);
-      print(applicationBLoc.user);
-    });
+    // socket.on('online', (data) {
+    //   print("inside online in profile page");
+    //   if (applicationBLoc.user == null) {
+    //     applicationBLoc.setUser(this.data);
+    //   }
+    //   // applicationBLoc.setId(data);
+    //   // print(applicationBLoc.user);
+    // });
 
 
     bool showFb = MediaQuery
@@ -246,7 +277,9 @@ class _ProfilePageState extends State<ProfilePage>  with WidgetsBindingObserver 
                           var response = await hello.getTextChains(
                               'api/getChats', map);
                           print(socket.id);
-                          applicationBLoc.setUser((json.decode(response.body))['loggeduser']);
+                          Map<String,dynamic> loggedUser = json.decode(response.body)['loggeduser'];
+                          loggedUser['count'] = 0;
+                          applicationBLoc.setUser(loggedUser);
 
                           // socket.on('/chats', (data) {
                           //   print(data);
@@ -258,8 +291,7 @@ class _ProfilePageState extends State<ProfilePage>  with WidgetsBindingObserver 
                               builder: (builder) =>
                                   Chats(
                                     socket: socket,
-                                    thisPage: (json.decode(response
-                                        .body))['loggeduser'],
+                                    thisPage: loggedUser,
                                   )
                           ));
                         //}
@@ -635,8 +667,8 @@ class _ProfilePageState extends State<ProfilePage>  with WidgetsBindingObserver 
                                               'Longitude' : _locationData.longitude,
                                               'address' : list[0]
                                             };
-                                            var response = await hello.patch('api/updateLocation', data);
-                                            print(json.decode(response.body));
+                                            // var response = await hello.patch('api/updateLocation', data);
+                                            // print(json.decode(response.body));
                                           },
                                           child: Text(
                                               "Use My Location"
@@ -663,11 +695,23 @@ class _ProfilePageState extends State<ProfilePage>  with WidgetsBindingObserver 
                                       //backgroundColor: Colors.grey[100]
                                     ),
                                   ),
+                                  subtitle: Text(
+                                    "Double tap on a tag to remove from the list",
+                                    style: TextStyle(
+                                      fontSize: 12
+                                    ),
+                                  ),
                                 ),
                                 SizedBox(height: 10),
                                 Wrap(
                                     crossAxisAlignment: WrapCrossAlignment.start,
-                                    children: tags.map((x) => Tag(text: x)).toList()
+                                    children: tags.map((x) => InkWell(
+                                      onDoubleTap: () {
+                                        tags.remove(x);
+                                        this.data['tags'] = tags;
+                                        applicationBLoc.setUser(data);
+                                      },
+                                        child: Tag(text: x))).toList()
                                 ),
                                 Neumorphic(
                                   style: NeumorphicStyle(

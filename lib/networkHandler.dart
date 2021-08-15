@@ -1,22 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:grup/db/datasource.dart';
+import 'package:grup/db/db.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:logger/logger.dart';
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
 
 class NetworkHandler {
   //String baseUrl = '10.120.8.146:3000';
-  String baseUrl = "172.31.75.147:3000";
+  // String baseUrl = "172.31.75.147:3000";
+  String baseUrl = "172.31.75.128:3000";
   //String baseUrl = 'grup-backend.herokuapp.com';
   var logger = Logger();
   FlutterSecureStorage storage = FlutterSecureStorage();
+  static Database _db;
+  static DataSource _dataSource;
+  DataSource get dataSource => _dataSource;
   // Map<String, String> data = {
   //   "userName": "Shivlock221b",
   //   "password": "Welcometo321@"
   // };
+
+
+  static configure() async {
+    _db = await LocalDatabaseFactory().createDatabase();
+    _dataSource = DataSource(_db);
+  }
+
 
   Future<http.Response> get(String url) async {
     print("plss");
@@ -95,7 +109,7 @@ class NetworkHandler {
     return response;
   }
 
-  Future<http.Response> getChats(String url, String chatId, List<String> userName) async {
+  Future<http.Response> getChats(String url, String chatId,  bool isGroup) async {
     var uri = Uri.http(baseUrl, url);
     print(await storage.read(key: "token"));
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -113,7 +127,7 @@ class NetworkHandler {
       },
       body: jsonEncode(<String, dynamic>{
         'chatId' : chatId,
-        'userName' : userName
+        "isGroup" : isGroup
       })
     );
     logger.i(response.body);
@@ -154,6 +168,7 @@ class NetworkHandler {
   }
 
   NetworkImage getImage(String url) {
+    print(url);
     var uri = Uri.http(baseUrl, url);
     print(uri.toString());
     return NetworkImage(uri.toString());

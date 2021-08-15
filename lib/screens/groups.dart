@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:grup/Pages/IndividualChat.dart';
 import 'package:grup/bloc/application_bloc.dart';
 import 'package:grup/networkHandler.dart';
+import 'package:grup/screens/group_profile.dart';
 import 'package:grup/screens/viewProfile.dart';
 import 'package:grup/services/broadcast.dart';
 import 'package:http/http.dart';
@@ -72,14 +73,14 @@ class _GroupBroadCastsState extends State<GroupBroadCasts> {
       child: Scaffold(
         appBar: AppBar(
           iconTheme: IconThemeData(
-            color: Colors.blue[600],
+            color: Colors.black,
           ),
           backgroundColor: Colors.yellow[300],
           centerTitle: true,
           title: Text(
             "Groups",
             style: TextStyle(
-              color: Colors.blue[600],
+              color: Colors.black,
             ),
           ),
           actions: [
@@ -96,7 +97,7 @@ class _GroupBroadCastsState extends State<GroupBroadCasts> {
           ],
         ),
         backgroundColor: Colors.blue[50],
-        body: ready ? Stack(
+        body: applicationBloc.user['tags'].length != 0 ? _locationData != null ? ready ? Stack(
           children: [
             // Container(
             //     // child: Image.asset(
@@ -116,152 +117,15 @@ class _GroupBroadCastsState extends State<GroupBroadCasts> {
                         groups[index]['location']['Latitude'], groups[index]['location']['Longitude'],
                         _locationData['latitude'], _locationData['longitude']) <= _value ?
                     InkWell(
-                      onTap: () {
-                        showGeneralDialog(
-                            barrierLabel: "Label",
-                            barrierDismissible: true,
-                            barrierColor: Colors.black.withOpacity(0.5),
-                            transitionDuration: Duration(milliseconds: 200),
-                            context: context,
-                            transitionBuilder: (context, anim1, anim2, child) {
-                              return SlideTransition(
-                                position: Tween(begin: Offset(0, 1), end: Offset(0, 0)).animate(anim1),
-                                child: child,
-                              );
-                            },
-                            pageBuilder: (context, animation1, animation2) {
-                              List<dynamic> tags = groups[index]['tags'];
-                              return Material(
-                                type: MaterialType.transparency,
-                                child: Align(
-                                    alignment: Alignment.bottomCenter,
-                                    child: Container(
-                                      height: 400,
-                                      margin: EdgeInsets.only(bottom: 150, left: 12, right: 12),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(40),
-                                      ),
-                                      child: SingleChildScrollView(
-                                        child: Column(
-                                          children: [
-                                            InkWell(
-                                              onTap: () {
-                                                Navigator.push(context, MaterialPageRoute(
-                                                    builder: (builder) {
-                                                      return ViewProfile();
-                                                    }
-                                                ));
-                                              },
-                                              child: Text(
-                                                groups[index]['name'],
-                                                style: TextStyle(
-                                                    fontSize: 30,
-                                                    color: Colors.blueAccent
-                                                ),
-                                              ),
-                                            ),
-                                            //SizedBox(height: 5,),
-                                            Divider(),
-                                            Container(
-                                              padding: EdgeInsets.all(8.0),
-                                              child: Text(
-                                                groups[index]['content'],
-                                                style: TextStyle(
-                                                    fontSize: 20,
-                                                    color: Colors.blue
-                                                ),
-                                              ),
-                                            ),
-                                            Divider(),
-                                            Wrap(
-                                                crossAxisAlignment: WrapCrossAlignment.start,
-                                                children: tags.map((x) => Tag(text: x)).toList()
-                                            ),
-                                            Divider(),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                              children: [
-                                                // TextButton(
-                                                //   onPressed: () {},
-                                                //   child: Text(
-                                                //       "Endorse"
-                                                //   ),
-                                                // ),
-                                                TextButton(
-                                                    onPressed: () async {
-                                                      Response response = await http.post("api/joinChat", groups[index]);
-                                                      print(response.body);
-                                                      if (response.statusCode == 400) {
-                                                        final snackBar = SnackBar(
-                                                          content: Text("Chat already exists"),
-                                                        );
-                                                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                                                      } else {
-                                                        Map<String,
-                                                            dynamic> data = json
-                                                            .decode(
-                                                            response.body);
-                                                        applicationBloc.setUser(
-                                                            data['user']);
-                                                        print(applicationBloc
-                                                            .user);
-                                                        Map<String,
-                                                            dynamic> sendData = {
-                                                          "chatId": data['newChat']['chatId'],
-                                                          'socketId': data['newChat']['members']
-                                                              .values.toList(),
-                                                          "userName": applicationBloc
-                                                              .user['userName']
-                                                        };
-                                                        socket.emit(
-                                                            "/newMember",
-                                                            sendData);
-                                                        await Navigator.push(
-                                                            context,
-                                                            MaterialPageRoute(
-                                                                builder: (
-                                                                    builder) =>
-                                                                    IndividualChat(
-                                                                      socket: socket,
-                                                                      data: applicationBloc.user,
-                                                                      chat: data['textChain']['textChain'],
-                                                                      //socketId: chatDetails['receiver']['socketId'],
-                                                                      chatId: data['newChat']['chatId'],
-                                                                      chatName: data['newChat']['name'],
-                                                                    )
-                                                            ));
-                                                      }
-                                                    },
-                                                    child: Text(
-                                                        "Join Group"
-                                                    )
-                                                ),
-                                                // TextButton(
-                                                //   onPressed: () {},
-                                                //   child: Text(
-                                                //       "Comment"
-                                                //   ),
-                                                // )
-                                              ],
-                                            ),
-                                            Container(
-                                              height: 300,
-                                              child: ListView.builder(
-                                                  itemCount: 1,
-                                                  itemBuilder: (context, index) {
-                                                    return Container();
-                                                  }
-                                              ),
-                                            )
-                                          ],
-                                        ),
-                                      ),
-                                    )
-                                ),
-                              );
-                            }
-                        );
+                      onTap: () async {
+                        // Response response = await http.post("api/getGroupProfile", groups[index]);
+                        // Map<String, dynamic> map = json.decode(response.body);
+                        Navigator.push(context, MaterialPageRoute(
+                            builder: (builder) => GroupProfile(
+                              socket: this.socket,
+                              group: groups[index],
+                            )
+                        ));
                       },
                       child: BroadCast(
                         text1: groups[index]['name'],
@@ -315,7 +179,38 @@ class _GroupBroadCastsState extends State<GroupBroadCasts> {
               ),
             ) : Container()
           ],
-        ) : Center(child : CircularProgressIndicator()),
+        ) : Center(child : CircularProgressIndicator())
+            : Container(
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(
+                  'assets/location.jpg'
+              ),
+              fit: BoxFit.cover
+            )
+          ),
+          child: Center(
+            child: Column(
+              children: [
+                SizedBox(height: 550,),
+                Text(
+                  "Choose a location to see groups"
+                ),
+              ],
+            ),
+          ),
+        ) : Center(
+          child: Container(
+            child: Text(
+              "Add Tags to view groups or look for trending tags and Groups in 'Explore' tab",
+              style: TextStyle(
+                  fontSize: 16
+              ),
+            ),
+          ),
+        ),
         floatingActionButton: Visibility(
           child: FloatingActionButton(
             child: Icon(Icons.bolt),

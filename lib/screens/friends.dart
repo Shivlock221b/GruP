@@ -18,33 +18,52 @@ class Friends extends StatefulWidget {
 class _FriendsState extends State<Friends> {
 
   NetworkHandler http = NetworkHandler();
+  List<dynamic> friends;
+  bool loaded = false;
+
+  @override
+  void initState() {
+    getFriends().then((data) {
+      setState(() {
+        friends = data;
+        loaded = true;
+      });
+    });
+    super.initState();
+  }
+
+  Future<List<dynamic>> getFriends() async {
+    Response response = await http.get("api/getFriends");
+    List<dynamic> friends = json.decode(response.body)['friends'];
+    return friends;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Friend List"
+          "Friends"
         ),
       ),
-      body: ListView.builder(
-        itemCount: widget.friends.length,
+      body: loaded? ListView.builder(
+        itemCount: friends.length,
           itemBuilder: (context, index) {
-            List<dynamic> friends = widget.friends[index]['friends'];
-            Map<String, dynamic> friend = friends[0];
-            if (friend['name'] == widget.userName) {
-              friend = friends[1];
-            }
+            // List<dynamic> friends = widget.friends[index]['friends'];
+            // Map<String, dynamic> friend = friends[0];
+            // if (friend['name'] == widget.userName) {
+            //   friend = friends[1];
+            // }
             return InkWell(
               onTap: () async {
                 Map<String, dynamic> data = {
-                  'name': friend['name']
+                  'name': friends[index]['userName']
                 };
                 Response response = await http.post("api/getOwner", data);
                 Map<String, dynamic> map = json.decode(response.body);
                 Navigator.push(context, MaterialPageRoute(
                     builder: (builder) {
-                      return ViewProfile(user: map['user'][0], self: map['self'], tags: map['tagMap'], socket: widget.socket, requests: map['request'], friends: map['friends'],);
+                      return ViewProfile(user: map['user'][0], self: map['self'], tags: map['tagMap'], socket: widget.socket, requests: map['request']);
                     }
                 ));
               },
@@ -58,10 +77,11 @@ class _FriendsState extends State<Friends> {
                       child: CircleAvatar(
                         radius: 25,
                         backgroundColor: Colors.blueAccent,
+                        backgroundImage: http.getImage(friends[index]['profilepic']),
                       ),
                     ),
                     Text(
-                      friend['name'],
+                      friends[index]['userName'],
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
@@ -72,7 +92,7 @@ class _FriendsState extends State<Friends> {
               ),
             );
           }
-      )
+      ): Center(child: CircularProgressIndicator(),)
     );
   }
 }
